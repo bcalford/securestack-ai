@@ -8,3 +8,21 @@ target/
 .vscode/
 *.class
 frontend/tsconfig.tsbuildinfo
+
+# macOS/Finder duplicate copy artifacts
+* 2.md
+* 2.yml
+* 2.yaml
+* 2.java
+* 2.ts
+* 2.tsx
+* 2.json
+* 3.md
+* 3.yml
+* 3.yaml
+* 3.java
+* 3.ts
+* 3.tsx
+* 3.json
+* copy.*
+* Copy.*
