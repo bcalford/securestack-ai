@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
+    private static final Logger log = LoggerFactory.getLogger(ApiController.class);
     private final ScanService scans;
     private final ReportService reports;
 
@@ -43,5 +46,5 @@ public class ApiController {
     ResponseEntity<ErrorResponse> validation(Exception e) { return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_ERROR", e.getMessage(), List.of())); }
 
     @ExceptionHandler(Exception.class)
-    ResponseEntity<ErrorResponse> unexpected(Exception e) { return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("INTERNAL_ERROR", "Unexpected server error.", List.of())); }
+    ResponseEntity<ErrorResponse> unexpected(Exception e) { log.error("Unexpected API error", e); return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("INTERNAL_ERROR", "Unexpected server error.", List.of())); }
 }

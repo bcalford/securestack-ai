@@ -152,9 +152,16 @@ public class ScanService {
     public RiskLevel level(int s) { return s >= 90 ? RiskLevel.LOW : s >= 70 ? RiskLevel.MODERATE : s >= 40 ? RiskLevel.HIGH : RiskLevel.CRITICAL; }
     private Map<Severity, Long> severityCounts(List<Finding> fs) { return fs.stream().collect(Collectors.groupingBy(f -> f.severity, () -> new EnumMap<>(Severity.class), Collectors.counting())); }
     private Map<Category, Long> categoryCounts(List<Finding> fs) { return fs.stream().collect(Collectors.groupingBy(f -> f.category, () -> new EnumMap<>(Category.class), Collectors.counting())); }
-    public ScanResultDto get(UUID id) { Scan s = scans.findById(id).orElseThrow(NoSuchElementException::new); return dto(s, findings.findByScanId(id)); }
+    @Transactional(readOnly = true)
+    public ScanResultDto get(UUID id) {
+        Scan s = scans.findById(id).orElseThrow(NoSuchElementException::new);
+        List<Finding> fs = findings.findByScanId(id);
+        return dto(s, fs);
+    }
+
+    @Transactional(readOnly = true)
     public List<ScanListItem> list() { return scans.findAll().stream().map(s -> new ScanListItem(s.id, s.name, s.createdAt, s.riskScore, s.riskLevel, s.findingCount)).toList(); }
     @Transactional public void update(UUID sid, UUID fid, FindingStatus st) { Finding f = findings.findById(fid).orElseThrow(NoSuchElementException::new); if (!f.scanId.equals(sid)) throw new NoSuchElementException(); f.status = st; }
-    @Transactional public void delete(UUID sid) { findings.deleteAll(findings.findByScanId(sid)); scans.deleteById(sid); }
-    private ScanResultDto dto(Scan s, List<Finding> fs) { return new ScanResultDto(s.id, s.name, s.createdAt, s.status, s.riskScore, s.riskLevel, s.fileCount, s.findingCount, s.executiveSummary, s.remediationSummary, fs.stream().map(f -> new FindingDto(f.id, f.fileName, f.lineNumber, f.title, f.description, f.severity, f.category, f.confidence, f.evidence, f.recommendation, f.secureExample, f.status, f.ruleId)).toList(), severityCounts(fs), categoryCounts(fs), s.files); }
+    @Transactional public void delete(UUID sid) { if (!scans.existsById(sid)) throw new NoSuchElementException(); findings.deleteAll(findings.findByScanId(sid)); scans.deleteById(sid); }
+    private ScanResultDto dto(Scan s, List<Finding> fs) { return new ScanResultDto(s.id, s.name, s.createdAt, s.status, s.riskScore, s.riskLevel, s.fileCount, s.findingCount, s.executiveSummary, s.remediationSummary, fs.stream().map(f -> new FindingDto(f.id, f.fileName, f.lineNumber, f.title, f.description, f.severity, f.category, f.confidence, f.evidence, f.recommendation, f.secureExample, f.status, f.ruleId)).toList(), severityCounts(fs), categoryCounts(fs), new ArrayList<>(s.files)); }
 }
