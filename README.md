@@ -62,3 +62,20 @@ Built SecureStack AI, an AI-assisted security review platform using React, TypeS
 
 ## LinkedIn post template
 I built SecureStack AI, a full-stack AI-assisted security review app that combines React, TypeScript, Java 21, Spring Boot, static security rules, mock LLM summaries, Docker, CI/CD, and PDF reporting. The project focuses on defensive scanning for secrets, API risks, cloud/IaC misconfiguration, and container issues while remaining runnable locally without paid credentials.
+
+
+## Review depth and focus areas
+
+- `QUICK` runs high-signal critical/high rules for fast triage.
+- `STANDARD` runs the normal rule set and skips low-value informational checks.
+- `FULL` runs every implemented rule, including broader heuristics.
+
+Focus areas map to rule categories: Application security, Secrets, Dependencies, API security, Cloud/IaC, Docker/container security, and AI-generated explanation. When no focus area is selected, all categories are reviewed.
+
+## Recruiter-facing resume bullet
+
+Built SecureStack AI, a Java 21/Spring Boot and React/TypeScript defensive security review platform with static analysis rules, deterministic mock-AI summaries, risk scoring, PDF reports, Docker Compose, CI, and AWS deployment documentation.
+
+## LinkedIn post template
+
+I built SecureStack AI, a full-stack portfolio project that reviews small codebases for defensive security issues, generates mock-AI executive summaries, and exports PDF reports. It demonstrates Spring Boot, React, TypeScript, Docker, CI/CD, cloud-readiness, and practical secure engineering.

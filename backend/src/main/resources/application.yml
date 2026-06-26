@@ -15,6 +15,7 @@ spring:
     open-in-view: false
 securestack:
   ai-provider: ${AI_PROVIDER:mock}
-  max-file-size-mb: ${MAX_FILE_SIZE_MB:2}
-  max-scan-files: ${MAX_SCAN_FILES:50}
-  store-raw-files: ${STORE_RAW_FILES:false}
+  scan:
+    max-file-size-mb: ${MAX_FILE_SIZE_MB:2}
+    max-scan-files: ${MAX_SCAN_FILES:50}
+    store-raw-files: ${STORE_RAW_FILES:false}
