@@ -1,22 +1,13 @@
 # Troubleshooting
 
-## npm ci failures
-Use Node 20 or 22, delete `frontend/node_modules`, then run `cd frontend && npm ci`. The current lockfile is committed for reproducible installs. `npm audit` may report transitive advisories; do not run forced upgrades without retesting Vite, React Query, Vitest, and Recharts.
+## Frontend cannot reach backend locally
+Run the backend on port 8080 and the frontend on port 5173. Vite proxies `/api` to `http://localhost:8080` during development.
 
-## Maven failures
-Use Java 21. Run `cd backend && mvn -version` to confirm the JDK, then `mvn test`.
+## Docker frontend cannot reach backend
+Use `docker compose up`; nginx proxies `/api` to the `backend` service inside the Compose network. Do not rely on `VITE_API_BASE_URL` at container runtime.
 
-## Docker unavailable
-Some hosted development environments do not expose a Docker daemon. Validate locally with `docker --version`, `docker compose config`, and `docker compose build`.
+## Missing scan returns 404
+`GET /api/scans/{scanId}` returns a `NOT_FOUND` error if the scan ID does not exist.
 
-## Port conflicts
-Backend uses `8080`; frontend nginx uses `5173`. Stop conflicting processes or edit `docker-compose.yml`.
-
-## Frontend cannot reach backend
-For local Vite dev set `VITE_API_BASE_URL=http://localhost:8080/api`. In Docker, nginx proxies `/api` to `backend:8080`.
-
-## PDF generation issues
-PDFs are generated on demand by the backend. If fonts or rendering fail, confirm `mvn package` succeeds and inspect backend logs for OpenHTMLToPDF errors.
-
-## Dependency advisories
-Review advisories with `npm audit` and upgrade deliberately. Avoid `npm audit fix --force` unless you are ready to validate breaking major versions.
+## Docker validation
+If Docker is unavailable in an agent environment, run `docker compose config` and `docker compose build` locally before presenting Docker as validated.

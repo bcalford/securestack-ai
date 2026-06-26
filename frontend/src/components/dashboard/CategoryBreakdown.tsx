@@ -1,0 +1,1 @@
+export default function CategoryBreakdown({ counts }: { counts: Record<string, number> }) { return <div className="card"><h3>Category breakdown</h3>{Object.keys(counts).length ? Object.entries(counts).map(([k,v])=><p key={k}>{k}: {v}</p>) : <p>No categories reported.</p>}</div>; }

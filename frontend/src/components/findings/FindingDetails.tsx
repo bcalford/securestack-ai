@@ -1,0 +1,2 @@
+import type { Finding } from '../../types';
+export default function FindingDetails({ finding }: { finding: Finding }) { return <details><summary>{finding.title}</summary><p>{finding.description}</p><p><b>Evidence:</b> {finding.evidence}</p><p><b>Fix:</b> {finding.recommendation}</p><p><b>Secure example:</b> {finding.secureExample}</p><p><b>Reference:</b> OWASP secure coding and least privilege guidance.</p></details>; }

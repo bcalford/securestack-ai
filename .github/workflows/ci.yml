@@ -8,13 +8,14 @@ jobs:
       - uses: actions/setup-java@v4
         with: {distribution: temurin, java-version: '21'}
       - run: cd backend && mvn test
+      - run: cd backend && mvn package
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '20'}
-      - run: cd frontend && npm install
+      - run: cd frontend && npm ci
       - run: cd frontend && npm run lint
       - run: cd frontend && npm run test
       - run: cd frontend && npm run build

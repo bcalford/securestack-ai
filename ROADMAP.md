@@ -1,10 +1,17 @@
 # Roadmap
 
-## Phase 1
-Local scans, static rules, mock AI summaries, PDF reports, Docker Compose, CI, and portfolio documentation.
+## Current MVP
+- Pasted/uploaded file scans.
+- Static heuristic rules.
+- Mock AI summaries.
+- Results dashboard and scan history.
+- Finding filters and status updates.
+- PDF report export.
+- Docker Compose local runtime.
 
-## Phase 2
-Amazon Bedrock integration, GitHub repository scanning, authentication, scan history dashboard, and PostgreSQL deployment profile.
-
-## Phase 3
-SARIF export, Semgrep integration, dependency vulnerability database, organization support, and AWS App Runner/ECS deployment.
+## Future work
+- Optional Bedrock/OpenAI integrations.
+- Authentication and user-owned scans.
+- GitHub repository scanning.
+- Semgrep and SARIF support.
+- Production AWS deployment automation.

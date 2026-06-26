@@ -1,26 +1,7 @@
 # Architecture
 
-SecureStack AI is a monorepo with a React/TypeScript frontend and Java 21 Spring Boot backend. The backend exposes REST endpoints, validates untrusted files, runs rule classes, scores risk, invokes an AI provider abstraction, persists scan metadata/findings in H2 locally, and generates PDF reports.
+SecureStack AI uses a React/Vite frontend, a Spring Boot backend, an H2-backed local persistence layer, static rule classes, a mock AI provider, and OpenHTMLToPDF report generation.
 
-## Sequence
-```mermaid
-sequenceDiagram
-  participant U as User
-  participant F as Frontend
-  participant B as Backend API
-  participant R as Rule Engine
-  participant A as Mock AI Provider
-  participant P as PDF Generator
-  U->>F: Paste/upload files
-  F->>B: POST /api/scans
-  B->>B: Validate file count/type/size
-  B->>R: Analyze normalized files
-  R-->>B: Findings
-  B->>A: Summary request
-  A-->>B: Executive summary/remediation
-  B->>P: Generate report on demand
-  B-->>F: Scan result
-```
+Flow: landing page -> new scan form -> `POST /api/scans` -> scan result DTO -> frontend navigation to `/scans/{scanId}` -> `GET /api/scans/{scanId}` -> dashboard, filters, status updates, and PDF export.
 
-## Data model
-Scan, finding, severity, category, confidence, status, and risk level are represented as typed Java domain objects and DTOs.
+The backend keeps controllers thin, performs scan orchestration in `ScanService`, keeps detection logic in `analysis/rules`, and returns DTOs rather than JPA entities.

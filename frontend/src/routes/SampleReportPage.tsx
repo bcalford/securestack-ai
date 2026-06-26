@@ -1,0 +1,1 @@
+export default function SampleReportPage() { return <main className="container"><h1>Sample Report</h1><p>A generated sample report placeholder is available in docs/sample-report.pdf after running backend report export. Reports include summary, score, findings, remediation, methodology, limitations, timestamp, and disclaimer.</p></main>; }

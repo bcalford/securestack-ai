@@ -1,81 +1,58 @@
 # SecureStack AI
 
-![Backend build](https://img.shields.io/badge/backend-build-blue) ![Frontend build](https://img.shields.io/badge/frontend-build-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+SecureStack AI is a full-stack, recruiter-ready security review portfolio project. It accepts pasted or uploaded source/configuration files, runs defensive static security heuristics, produces mock AI summaries, and exports a PDF report.
 
-SecureStack AI is an AI-assisted security review platform that scans software project files for application, dependency, API, Docker, and cloud/IaC risks. It combines Java/Spring static rules with deterministic mock AI summaries and PDF report generation so it runs locally with no OpenAI, AWS, or deployment credentials.
+## Current features
+- React + TypeScript + Vite frontend with landing page, scan form, results dashboard, scan history, finding filters, status updates, and PDF export.
+- Java 21 + Spring Boot backend with DTO-based APIs for scan creation, retrieval, listing, finding updates, and reports.
+- Static defensive rules for secrets, CORS, cookies, debug exposure, injection patterns, JWT/auth risks, logging, rate limiting, IAM, S3, security groups, Dockerfiles, and dependency scripts.
+- Mock AI provider enabled by default; no external credentials are required.
+- Docker Compose setup with nginx proxying `/api` to the backend.
+- CI that runs backend tests/package and frontend lint/test/build without secrets.
 
-## Features
-- Paste files, upload files, or upload ZIP archives.
-- Detect hardcoded secrets, wildcard CORS, weak JWTs, risky auth endpoints, SQL/command injection patterns, public S3 and permissive IAM, insecure Dockerfiles, suspicious dependency scripts, debug mode, and sensitive logging.
-- Risk score from 0-100 with severity/category breakdowns.
-- Mock AI executive summaries by default via `AI_PROVIDER=mock`.
-- PDF security review reports.
-- Docker Compose and GitHub Actions CI.
+## Future roadmap
+- Optional Bedrock/OpenAI provider setup.
+- Authentication and multi-user storage.
+- GitHub repository scanning.
+- Semgrep/SARIF ingestion.
+- Production deployment automation.
 
-## Architecture
-```mermaid
-flowchart LR
-  UI[React + TypeScript + Vite] --> API[Spring Boot REST API]
-  API --> Rules[Static Rule Engine]
-  API --> AI[AI Provider Abstraction / Mock]
-  API --> PDF[OpenHTMLToPDF Reports]
-  API --> DB[(H2 local / PostgreSQL-ready)]
-```
-
-## Quick start
+## Local development
 ```bash
-docker compose up --build
+cd backend && mvn spring-boot:run
+cd frontend && npm ci && npm run dev
 ```
-Open http://localhost:5173.
+Open `http://localhost:5173`. The Vite dev server proxies `/api` to `http://localhost:8080`.
 
-Backend only:
+## Docker
 ```bash
-cd backend
-mvn spring-boot:run
-mvn test
-mvn package
+docker compose config
+docker compose build
+docker compose up
 ```
-Frontend only:
+Open `http://localhost:5173`. The frontend container serves the Vite build through nginx and proxies `/api` to the backend service. Backend health remains available at `http://localhost:8080/api/health`.
+
+## Testing
 ```bash
-cd frontend
-npm install
-npm run dev
-npm run test
-npm run lint
-npm run build
+cd backend && mvn test
+cd backend && mvn package
+cd frontend && npm ci
+cd frontend && npm run lint
+cd frontend && npm run test
+cd frontend && npm run build
 ```
 
-## Environment
-Copy `.env.example`. Defaults use mock AI, H2, and no raw file persistence. `STORE_RAW_FILES=false` means the intended storage policy is metadata, hashes, sanitized previews, findings, summaries, and reports rather than raw uploaded secrets.
+## Screenshots
+Place validated screenshots in `docs/screenshots/` after local UI review. Suggested captures: landing page, new scan form, results dashboard, findings filters, scan history, and PDF download.
 
-## Sample scans
-Use `samples/vulnerable-node-api`, `samples/vulnerable-spring-api`, `samples/insecure-docker`, and `samples/insecure-terraform` to demonstrate high-value findings. Use `samples/clean-example` to demonstrate a low-risk result.
-
-## Deployment readiness
-Frontend can deploy to AWS Amplify, S3 + CloudFront, Netlify, or Vercel. Backend is documented for AWS App Runner or ECS Fargate with environment variables and no required AWS credentials for local development.
-
-## Limitations
-SecureStack AI is defensive and static. It does not execute uploaded code, does not prove exploitability, does not replace professional security review, and real Bedrock/OpenAI integrations are optional future work.
+## Troubleshooting
+See [`docs/troubleshooting.md`](docs/troubleshooting.md).
 
 ## Resume bullet
-Built SecureStack AI, an AI-assisted security review platform using React, TypeScript, Java Spring Boot, AWS-ready architecture, and LLM-based analysis abstractions to scan project files for application, dependency, API, and cloud security risks; implemented static rule checks, structured risk scoring, PDF report generation, CI/CD, and production documentation.
+Built SecureStack AI, a full-stack security review platform using React, TypeScript, Java 21, Spring Boot, Docker, CI, static analysis heuristics, mock AI summaries, and PDF reporting to demonstrate production-minded software engineering and defensive security workflows.
 
 ## LinkedIn post template
-I built SecureStack AI, a full-stack AI-assisted security review app that combines React, TypeScript, Java 21, Spring Boot, static security rules, mock LLM summaries, Docker, CI/CD, and PDF reporting. The project focuses on defensive scanning for secrets, API risks, cloud/IaC misconfiguration, and container issues while remaining runnable locally without paid credentials.
+I built SecureStack AI, a full-stack security review portfolio project that analyzes pasted or uploaded code/configuration files, highlights defensive findings, generates mock AI summaries, and exports PDF reports. The stack includes React, TypeScript, Java 21, Spring Boot, Docker, CI, and security-focused documentation.
 
-
-## Review depth and focus areas
-
-- `QUICK` runs high-signal critical/high rules for fast triage.
-- `STANDARD` runs the normal rule set and skips low-value informational checks.
-- `FULL` runs every implemented rule, including broader heuristics.
-
-Focus areas map to rule categories: Application security, Secrets, Dependencies, API security, Cloud/IaC, Docker/container security, and AI-generated explanation. When no focus area is selected, all categories are reviewed.
-
-## Recruiter-facing resume bullet
-
-Built SecureStack AI, a Java 21/Spring Boot and React/TypeScript defensive security review platform with static analysis rules, deterministic mock-AI summaries, risk scoring, PDF reports, Docker Compose, CI, and AWS deployment documentation.
-
-## LinkedIn post template
-
-I built SecureStack AI, a full-stack portfolio project that reviews small codebases for defensive security issues, generates mock-AI executive summaries, and exports PDF reports. It demonstrates Spring Boot, React, TypeScript, Docker, CI/CD, cloud-readiness, and practical secure engineering.
+## Security note
+SecureStack AI does not execute uploaded code and does not replace a professional security review. Static rules are heuristic and intended for defensive education, triage, and portfolio demonstration.

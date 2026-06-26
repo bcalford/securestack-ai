@@ -1,0 +1,2 @@
+import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
+export default function SeverityChart({ counts }: { counts: Record<string, number> }) { const chart=Object.entries(counts).map(([name,value])=>({name,value})); if(!chart.length) return <div className="card">No severity data yet.</div>; return <div className="card"><ResponsiveContainer height={150}><PieChart><Pie data={chart} dataKey="value" nameKey="name">{chart.map((_,i)=><Cell key={i} fill={['#7f1d1d','#dc2626','#f59e0b','#22c55e','#94a3b8'][i%5]}/>)}</Pie></PieChart></ResponsiveContainer></div>; }
