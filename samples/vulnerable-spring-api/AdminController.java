@@ -1,0 +1,1 @@
+@RestController class AdminController { @GetMapping("/admin/users") String users(){ return "users"; } @PostMapping("/export") String export(String name)throws Exception{ return Runtime.getRuntime().exec(name).toString(); } void cookie(HttpServletResponse r){ r.addHeader("Set-Cookie","sid=abc"); }}

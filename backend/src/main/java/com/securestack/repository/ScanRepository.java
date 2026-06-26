@@ -1,0 +1,1 @@
+package com.securestack.repository;import org.springframework.data.jpa.repository.JpaRepository;import java.util.UUID;import com.securestack.model.Entities.Scan;public interface ScanRepository extends JpaRepository<Scan,UUID>{}

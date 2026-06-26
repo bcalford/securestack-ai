@@ -1,0 +1,1 @@
+package com.securestack.repository;import org.springframework.data.jpa.repository.JpaRepository;import java.util.*;import com.securestack.model.Entities.Finding;public interface FindingRepository extends JpaRepository<Finding,UUID>{List<Finding> findByScanId(UUID scanId);void deleteByScanId(UUID scanId);}

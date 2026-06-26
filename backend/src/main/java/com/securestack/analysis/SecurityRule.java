@@ -1,0 +1,1 @@
+package com.securestack.analysis;import java.util.*;import com.securestack.dto.Dto.ScanFileInput;import com.securestack.model.Entities.Finding;import com.securestack.model.Enums.*;public interface SecurityRule{String id();String name();Category category();Severity defaultSeverity();boolean supports(ScanFileInput file);List<Finding> analyze(ScanFileInput file);}

@@ -1,0 +1,20 @@
+server:
+  port: ${SERVER_PORT:8080}
+spring:
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE_MB:2}MB
+      max-request-size: 20MB
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:mem:securestack;DB_CLOSE_DELAY=-1}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+securestack:
+  ai-provider: ${AI_PROVIDER:mock}
+  max-file-size-mb: ${MAX_FILE_SIZE_MB:2}
+  max-scan-files: ${MAX_SCAN_FILES:50}
+  store-raw-files: ${STORE_RAW_FILES:false}

