@@ -2,7 +2,7 @@ package com.securestack.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.securestack.analysis.SecurityRule;
-import com.securestack.analysis.ai.Ai.*;
+import com.securestack.analysis.ai.*;
 import com.securestack.config.ScanProperties;
 import com.securestack.dto.Dto.*;
 import com.securestack.model.Entities.*;
@@ -68,7 +68,8 @@ public class ScanService {
         scan.riskLevel = level(scan.riskScore);
         Map<Severity, Long> sev = severityCounts(found);
         Map<Category, Long> cat = categoryCounts(found);
-        var summary = ai.generateSummary(new AiAnalysisRequest(scan.name, scan.riskScore, sev, cat, reviewDepth.name()));
+        var summary = ai.generateSummary(new AiAnalysisRequest(scan.name, scan.riskScore, scan.riskLevel, sev, cat, reviewDepth.name(), scan.files, findingSummaries(found), recommendations(found), rawContentSummaries(files)));
+        scan.aiProvider = summary.provider();
         scan.executiveSummary = summary.executiveSummary();
         scan.remediationSummary = summary.remediationPlan();
         scans.save(scan);
@@ -152,6 +153,10 @@ public class ScanService {
     public RiskLevel level(int s) { return s >= 90 ? RiskLevel.LOW : s >= 70 ? RiskLevel.MODERATE : s >= 40 ? RiskLevel.HIGH : RiskLevel.CRITICAL; }
     private Map<Severity, Long> severityCounts(List<Finding> fs) { return fs.stream().collect(Collectors.groupingBy(f -> f.severity, () -> new EnumMap<>(Severity.class), Collectors.counting())); }
     private Map<Category, Long> categoryCounts(List<Finding> fs) { return fs.stream().collect(Collectors.groupingBy(f -> f.category, () -> new EnumMap<>(Category.class), Collectors.counting())); }
+    private List<AiAnalysisRequest.FindingSummary> findingSummaries(List<Finding> fs) { return fs.stream().map(f -> new AiAnalysisRequest.FindingSummary(f.title, f.description, f.severity, f.category, f.confidence, f.fileName, f.lineNumber, mask(f.evidence), f.recommendation)).toList(); }
+    private List<String> recommendations(List<Finding> fs) { return fs.stream().map(f -> f.recommendation).filter(Objects::nonNull).distinct().toList(); }
+    private List<AiAnalysisRequest.FileContentSummary> rawContentSummaries(List<ScanFileInput> files) { return files.stream().map(f -> new AiAnalysisRequest.FileContentSummary(f.fileName(), mask(f.content()))).toList(); }
+    private String mask(String value) { if (value == null) return ""; return value.replaceAll("(?i)(password|secret|token|api[_-]?key|access[_-]?key)(\s*[=:]\s*)[^\s,'\"}]+", "$1$2<redacted>"); }
     @Transactional(readOnly = true)
     public ScanResultDto get(UUID id) {
         Scan s = scans.findById(id).orElseThrow(NoSuchElementException::new);
@@ -163,5 +168,5 @@ public class ScanService {
     public List<ScanListItem> list() { return scans.findAll().stream().map(s -> new ScanListItem(s.id, s.name, s.createdAt, s.riskScore, s.riskLevel, s.findingCount)).toList(); }
     @Transactional public void update(UUID sid, UUID fid, FindingStatus st) { Finding f = findings.findById(fid).orElseThrow(NoSuchElementException::new); if (!f.scanId.equals(sid)) throw new NoSuchElementException(); f.status = st; }
     @Transactional public void delete(UUID sid) { if (!scans.existsById(sid)) throw new NoSuchElementException(); findings.deleteAll(findings.findByScanId(sid)); scans.deleteById(sid); }
-    private ScanResultDto dto(Scan s, List<Finding> fs) { return new ScanResultDto(s.id, s.name, s.createdAt, s.status, s.riskScore, s.riskLevel, s.fileCount, s.findingCount, s.executiveSummary, s.remediationSummary, fs.stream().map(f -> new FindingDto(f.id, f.fileName, f.lineNumber, f.title, f.description, f.severity, f.category, f.confidence, f.evidence, f.recommendation, f.secureExample, f.status, f.ruleId)).toList(), severityCounts(fs), categoryCounts(fs), new ArrayList<>(s.files)); }
+    private ScanResultDto dto(Scan s, List<Finding> fs) { return new ScanResultDto(s.id, s.name, s.createdAt, s.status, s.riskScore, s.riskLevel, s.fileCount, s.findingCount, s.aiProvider, s.executiveSummary, s.remediationSummary, fs.stream().map(f -> new FindingDto(f.id, f.fileName, f.lineNumber, f.title, f.description, f.severity, f.category, f.confidence, f.evidence, f.recommendation, f.secureExample, f.status, f.ruleId)).toList(), severityCounts(fs), categoryCounts(fs), new ArrayList<>(s.files)); }
 }

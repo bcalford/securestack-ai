@@ -19,3 +19,10 @@ securestack:
     max-file-size-mb: ${MAX_FILE_SIZE_MB:2}
     max-scan-files: ${MAX_SCAN_FILES:50}
     store-raw-files: ${STORE_RAW_FILES:false}
+  bedrock:
+    region: ${AWS_REGION:us-east-1}
+    model-id: ${BEDROCK_MODEL_ID:amazon.nova-lite-v1:0}
+    max-tokens: ${BEDROCK_MAX_TOKENS:1200}
+    temperature: ${BEDROCK_TEMPERATURE:0.2}
+    send-raw-content: ${BEDROCK_SEND_RAW_CONTENT:false}
+    timeout-seconds: ${BEDROCK_TIMEOUT_SECONDS:30}
