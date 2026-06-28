@@ -2,7 +2,7 @@
 
 ## Opening
 
-“SecureStack AI is a full-stack defensive security review app. It lets a user paste or upload source and configuration files, runs heuristic security checks, summarizes findings with a mock AI provider, and exports a polished PDF report. I built it to demonstrate software engineering, AI-assisted analysis patterns, cybersecurity, and cloud-ready architecture without requiring external credentials.”
+“SecureStack AI is a full-stack defensive security review app. It lets a user paste or upload source and configuration files, runs heuristic security checks, summarizes findings with mock AI by default or an optional manually configured Amazon Bedrock provider, and exports a polished PDF report. I built it to demonstrate software engineering, AI-assisted analysis patterns, cybersecurity, and cloud-ready architecture while keeping the default local workflow credential-free.”
 
 ## Landing page
 
@@ -30,4 +30,4 @@
 
 ## Closing
 
-“This project is intentionally scoped as a polished MVP. It shows full-stack delivery, typed frontend work, Spring service design, defensive security analysis, report generation, Docker readiness, CI, and documentation. Real Bedrock/OpenAI providers, authentication, GitHub scanning, Semgrep/SARIF, and production AWS deployment are documented future work rather than claimed current features.”
+“This project is intentionally scoped as a polished MVP. It shows full-stack delivery, typed frontend work, Spring service design, defensive security analysis, report generation, Docker readiness, CI, documentation, and optional manually configured Bedrock summaries. OpenAI, authentication, GitHub scanning, Semgrep/SARIF, and production AWS deployment are documented future work rather than claimed current features.”

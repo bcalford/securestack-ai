@@ -1,6 +1,6 @@
 # Screenshots
 
-These screenshots were locally validated by the project owner using the Docker Compose workflow and then committed to the repository for launch presentation.
+These screenshots were locally validated by the project owner using the Docker Compose workflow and then committed to the repository for launch presentation. They may not yet show the newest Bedrock Markdown rendering and should be refreshed during the final release screenshot pass.
 
 ## Current screenshot files
 

@@ -21,6 +21,16 @@ test('results page shows bedrock provider', async()=>{ mockScanResponse(bedrockS
 
 test('bedrock markdown summary renders headings lists and bold text', async()=>{ mockScanResponse(bedrockScan); const { container } = renderPath('/scans/scan-1'); expect(await screen.findByRole('heading', { name: 'Defensive Security Review Summary' })).toBeInTheDocument(); expect(screen.getByText('Scan Name:').tagName).toBe('STRONG'); expect(screen.getByText('Prioritize secret rotation')).toBeInTheDocument(); expect(container.querySelector('.markdown-summary')?.textContent).not.toContain('###'); });
 
+
+
+test('markdown summary does not render raw html', async()=>{ const unsafeScan = { ...bedrockScan, executiveSummary:`### Safe Heading
+
+<script>alert(1)</script>
+
+<img src=x onerror=alert(1)>
+
+- Safe item` }; mockScanResponse(unsafeScan); const { container } = renderPath('/scans/scan-1'); expect(await screen.findByRole('heading', { name: 'Safe Heading' })).toBeInTheDocument(); expect(screen.getByText('Safe item')).toBeInTheDocument(); expect(container.querySelector('script')).toBeNull(); expect(container.querySelector('img')).toBeNull(); });
+
 test('mock summaries still display correctly', async()=>{ mockScanResponse(); renderPath('/scans/scan-1'); expect(await screen.findByText('Summary provider: mock')).toBeInTheDocument(); expect(screen.getByText('Summary')).toBeInTheDocument(); expect(screen.getByText('Fix things')).toBeInTheDocument(); });
 
 test('findings search and filters narrow rows', async()=>{ mockScanResponse(); renderPath('/scans/scan-1'); await screen.findByText('Hardcoded credential'); fireEvent.change(screen.getByLabelText('Search findings'),{target:{value:'cors'}}); expect(screen.queryByText('Hardcoded credential')).not.toBeInTheDocument(); expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument(); });

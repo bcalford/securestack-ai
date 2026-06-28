@@ -1,5 +1,14 @@
 .DS_Store
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.aws/
+aws-credentials*
+credentials*
 *.log
 node_modules/
 dist/

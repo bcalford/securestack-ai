@@ -159,11 +159,11 @@ Technical reviewers can use [`docs/recruiter-review-guide.md`](docs/recruiter-re
 
 ## Resume bullet
 
-Built SecureStack AI, a full-stack defensive security review platform using React, TypeScript, Java 21, Spring Boot, Docker, CI, heuristic static analysis, mock AI summaries, and PDF reporting to demonstrate production-minded software engineering, cybersecurity, AI-readiness, and cloud-readiness.
+Built SecureStack AI, a full-stack defensive security review platform using React, TypeScript, Java 21, Spring Boot, Docker, CI, heuristic static analysis, mock AI summaries by default, optional manually configured Amazon Bedrock summaries, and PDF reporting to demonstrate production-minded software engineering, cybersecurity, AI-readiness, and cloud-readiness.
 
 ## LinkedIn post template
 
-I built SecureStack AI, a full-stack security review portfolio project that analyzes pasted or uploaded code/configuration files, highlights defensive findings, generates mock summaries by default with optional manually configured Bedrock summaries, and exports PDF reports. The stack includes React, TypeScript, Java 21, Spring Boot, Docker Compose, nginx proxying, CI, and security-focused documentation. It is intentionally scoped as an MVP today, with Bedrock/OpenAI, authentication, GitHub scanning, Semgrep/SARIF, and production AWS deployment documented as future work.
+I built SecureStack AI, a full-stack security review portfolio project that analyzes pasted or uploaded code/configuration files, highlights defensive findings, generates mock summaries by default, optionally generates manually configured Amazon Bedrock summaries, and exports PDF reports. The stack includes React, TypeScript, Java 21, Spring Boot, Docker Compose, nginx proxying, CI, defensive Markdown rendering for Bedrock output, and security-focused documentation. It is intentionally scoped as an MVP today: OpenAI, authentication, GitHub scanning, Semgrep/SARIF, and production AWS deployment remain documented future work.
 
 ## Troubleshooting link
 
