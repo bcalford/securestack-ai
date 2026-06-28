@@ -1,43 +1,23 @@
 # Architecture
 
-SecureStack AI is a local-first full-stack security review MVP.
+SecureStack AI is a local-first full-stack security review MVP with a guided demo UX.
 
-## Components
+## Frontend
 
-- **Frontend:** React, TypeScript, Vite, reusable route/component structure, and Vitest tests.
-- **Docker frontend serving:** nginx serves the built frontend and proxies `/api` requests to the backend service inside Docker Compose.
-- **Backend:** Java 21, Spring Boot, DTO-based API layer, scan orchestration services, local persistence, and OpenHTMLToPDF reporting.
-- **Analysis:** Defensive static heuristic rules under `backend/src/main/java/com/securestack/analysis/rules/`.
-- **AI summary:** AI provider abstraction with deterministic mock summaries by default and optional Amazon Bedrock summaries through a Bedrock runtime gateway and defensive prompt builder.
-- **CI:** GitHub Actions runs backend tests/package and frontend install/lint/test/build without secrets.
+React/TypeScript/Vite routes provide the landing page, new review form, results dashboard, scan history, about page, and sample report. Demo fixtures live in `frontend/src/data/demoSamples.ts`; risk-prioritization helpers live in `frontend/src/utils/risk.ts`.
 
-## Request flow
+## Backend pipeline
 
-1. User opens the React app at `http://localhost:5173`.
-2. User creates a scan from pasted or uploaded files.
-3. Frontend sends `POST /api/scans`.
-4. Backend validates untrusted inputs and does not execute uploaded code.
-5. Scan service runs static heuristic rules and asks the configured AI provider for a summary. Mock is default; optional Bedrock uses the prompt builder and Bedrock runtime gateway.
-6. Backend returns a scan ID and DTO response.
-7. Frontend navigates to `/scans/{scanId}` and calls `GET /api/scans/{scanId}`.
-8. User reviews dashboard, filters findings, updates finding status, exports PDF, or opens scan history.
+Spring Boot controllers remain thin. `ScanService` validates untrusted pasted/uploaded files, runs static rule classes, stores scan/finding data locally, asks the AI provider abstraction for summaries, and returns DTOs. Report generation uses OpenHTMLToPDF.
 
-## Docker networking
+## AI provider abstraction
 
-Docker Compose exposes:
+Mock summaries are default. Optional Bedrock uses manual environment configuration and keeps `BEDROCK_SEND_RAW_CONTENT=false` by default.
 
-- Frontend: `http://localhost:5173`
-- Backend health: `http://localhost:8080/api/health`
+## Reports and persistence
 
-The frontend container does not rely on a runtime `VITE_API_BASE_URL`. Instead, nginx proxies relative `/api` requests to `http://backend:8080/api/` on the Compose network.
+PDF reports include score, findings, remediation checklist, methodology, limitations, and disclaimer. Local persistence is for demos, not multi-user production use.
 
-## Data and report boundaries
+## AWS blueprint
 
-The MVP uses local persistence suitable for demos and development. PDF generation escapes user-controlled content and documents methodology, limitations, and disclaimer text. Deployment documentation is guidance only, not proof that the project is deployed to AWS.
-
-
-## Optional Amazon Bedrock AI provider
-
-SecureStack AI defaults to `AI_PROVIDER=mock`, which is deterministic, local, and requires no AWS credentials for Docker, tests, or normal development. An optional Bedrock mode can be enabled manually with `AI_PROVIDER=bedrock`, `AWS_REGION`, `BEDROCK_MODEL_ID` (default `amazon.nova-lite-v1:0`), `BEDROCK_MAX_TOKENS`, `BEDROCK_TEMPERATURE`, `BEDROCK_SEND_RAW_CONTENT=false`, and `BEDROCK_TIMEOUT_SECONDS`.
-
-Bedrock prompts are defensive and remediation-focused. By default they send scan metadata, risk score/level, severity and category counts, filenames, finding titles/descriptions, confidence, line numbers, masked evidence, and recommendations. Raw uploaded file contents are not sent unless `BEDROCK_SEND_RAW_CONTENT=true`; that experimental mode is not recommended for real secrets, private code, or sensitive customer data. If credentials, region, model access, or model ID are missing, the backend returns a controlled fallback summary while static findings remain available.
+See [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md) for App Runner and ECS Fargate future production options.

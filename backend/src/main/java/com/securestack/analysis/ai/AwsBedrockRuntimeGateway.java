@@ -35,6 +35,6 @@ public class AwsBedrockRuntimeGateway implements BedrockRuntimeGateway {
         } catch (Exception e) { throw new BedrockRuntimeException(safeMessage(e), e); }
     }
 
-    private static String safeMessage(Exception e) { return e.getClass().getSimpleName() + ": " + (e.getMessage() == null ? "Bedrock invocation failed" : e.getMessage().replaceAll("(?i)(aws_access_key_id|aws_secret_access_key|sessionToken)=[^,\s]+", "$1=<redacted>")); }
+    private static String safeMessage(Exception e) { return e.getClass().getSimpleName() + ": " + (e.getMessage() == null ? "Bedrock invocation failed" : e.getMessage().replaceAll("(?i)(credential|access.?key|secret.?key|session.?token)=[^,\s]+", "$1=<redacted>")); }
     public static class BedrockRuntimeException extends RuntimeException { public BedrockRuntimeException(String message, Throwable cause) { super(message, cause); } }
 }
