@@ -27,6 +27,7 @@ Implemented now:
 - Scan history and scan retrieval by ID.
 - PDF report export with executive summary, findings, remediation checklist, methodology, limitations, and disclaimer.
 - Mock AI summaries by default with no external credentials required.
+- Optional Amazon Bedrock summaries after manual AWS credentials, region, and model access are configured.
 - Docker Compose local runtime with nginx serving the frontend and proxying `/api` to the backend.
 - CI for backend tests/package and frontend install/lint/test/build.
 
@@ -45,7 +46,7 @@ flowchart LR
   UI -->|Docker: relative /api via nginx proxy| API[Spring Boot API]
   API --> Scan[ScanService orchestration]
   Scan --> Rules[Static heuristic rule engine]
-  Scan --> AI[Mock AI summary provider]
+  Scan --> AI[AI provider abstraction: mock default or optional Bedrock]
   Scan --> Store[(Local H2 persistence)]
   API --> Report[OpenHTMLToPDF report generation]
   Report --> PDF[Downloadable PDF]
@@ -59,7 +60,7 @@ The architecture intentionally keeps controllers thin, scan orchestration in ser
 2. The frontend submits pasted/uploaded files to `POST /api/scans`.
 3. The backend validates inputs, treats all files as untrusted, and does not execute uploaded code.
 4. Rule classes emit defensive findings with severity, category, evidence, and remediation guidance.
-5. The mock AI provider creates a local summary without calling external services.
+5. The configured AI provider creates a summary: mock by default, or optional Bedrock when explicitly enabled.
 6. The frontend navigates to `/scans/{scanId}` and loads results from `GET /api/scans/{scanId}`.
 7. Users can filter findings, update finding status, review scan history, and export a PDF report.
 
@@ -144,13 +145,13 @@ SecureStack AI treats uploaded files as untrusted, validates upload constraints,
 ## Limitations
 
 - Static findings are heuristic and can produce false positives or miss context-dependent issues.
-- The MVP uses local persistence and mock AI summaries.
-- Bedrock/OpenAI provider setup, authentication, GitHub repository scanning, Semgrep/SARIF ingestion, and production deployment automation are future/manual work, not implemented features.
+- The MVP uses local persistence and mock AI summaries by default.
+- Optional Bedrock summary generation is implemented for manual local setup; OpenAI, authentication, GitHub repository scanning, Semgrep/SARIF ingestion, and production deployment automation remain future work.
 - Deployment documentation is guidance only and is not proof that this repository is currently deployed in AWS.
 
 ## Future roadmap
 
-Planned future work includes optional real AI provider adapters, authentication and multi-user storage, GitHub repository ingestion, Semgrep/SARIF import, richer rule tuning, and production AWS deployment automation. See [`ROADMAP.md`](ROADMAP.md).
+Planned future work includes OpenAI provider support, authentication and multi-user storage, GitHub repository ingestion, Semgrep/SARIF import, richer rule tuning, and production AWS deployment automation. See [`ROADMAP.md`](ROADMAP.md).
 
 ## Recruiter review guide
 
@@ -162,7 +163,7 @@ Built SecureStack AI, a full-stack defensive security review platform using Reac
 
 ## LinkedIn post template
 
-I built SecureStack AI, a full-stack security review portfolio project that analyzes pasted or uploaded code/configuration files, highlights defensive findings, generates mock AI summaries, and exports PDF reports. The stack includes React, TypeScript, Java 21, Spring Boot, Docker Compose, nginx proxying, CI, and security-focused documentation. It is intentionally scoped as an MVP today, with Bedrock/OpenAI, authentication, GitHub scanning, Semgrep/SARIF, and production AWS deployment documented as future work.
+I built SecureStack AI, a full-stack security review portfolio project that analyzes pasted or uploaded code/configuration files, highlights defensive findings, generates mock summaries by default with optional manually configured Bedrock summaries, and exports PDF reports. The stack includes React, TypeScript, Java 21, Spring Boot, Docker Compose, nginx proxying, CI, and security-focused documentation. It is intentionally scoped as an MVP today, with Bedrock/OpenAI, authentication, GitHub scanning, Semgrep/SARIF, and production AWS deployment documented as future work.
 
 ## Troubleshooting link
 

@@ -8,6 +8,7 @@
 - Scan creation, retrieval, history, finding filters, and status updates.
 - Static heuristic rules for application, cloud/IaC, and container risk indicators.
 - Mock AI summaries by default.
+- Optional Amazon Bedrock provider for manual local setup.
 - PDF report export.
 - Docker Compose local runtime with nginx `/api` proxying.
 - CI for backend and frontend validation.
@@ -15,13 +16,14 @@
 
 ## Manual setup later
 
+- Amazon Bedrock credentials, region, and model access for live local Bedrock summaries.
 - GitHub repository description, topics, pinned repository, demo video, resume entry, and LinkedIn launch post.
 - Optional local screenshot refresh after UI changes.
 - Manual AWS deployment experimentation if desired.
 
 ## Future engineering work
 
-- Optional Bedrock/OpenAI provider adapters with safe configuration and no committed secrets.
+- OpenAI provider adapter with safe configuration and no committed secrets.
 - Authentication and user-owned scan storage.
 - GitHub repository scanning workflow.
 - Semgrep and SARIF ingestion.

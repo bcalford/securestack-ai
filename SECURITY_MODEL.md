@@ -24,7 +24,7 @@ SecureStack AI is designed for defensive local analysis and portfolio demonstrat
 
 - Authentication and authorization.
 - Multi-tenant/user-owned scans.
-- Real Bedrock/OpenAI provider integrations.
+- OpenAI provider integration. Optional Bedrock is implemented for manual local setup.
 - GitHub repository scanning.
 - Semgrep/SARIF ingestion.
 - Production-grade secrets management, TLS, observability, and deployment automation.

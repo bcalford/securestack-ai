@@ -6,7 +6,7 @@ Production AWS deployment automation is intentionally future work. This document
 
 - The app runs locally with Docker Compose.
 - The frontend Docker image serves the Vite build through nginx and proxies `/api` to the backend service.
-- The backend uses mock AI by default and requires no Bedrock/OpenAI credentials.
+- The backend uses mock AI by default and requires no Bedrock/OpenAI credentials. Optional Bedrock is implemented for local/manual use when AWS credentials, region, and model access are configured.
 - Local/demo persistence is suitable for portfolio use, not production multi-user operation.
 
 ## Future deployment considerations
@@ -22,7 +22,7 @@ A production AWS pass could add:
 - IAM least-privilege roles.
 - Deployment automation and rollback strategy.
 
-Do not treat Bedrock/OpenAI, production hosting, authentication, or deployment automation as implemented current features.
+Do not treat production hosting, authentication, OpenAI, or deployment automation as implemented current features. Bedrock provider support exists for local/manual use, but production AWS deployment remains future work.
 
 
 ## Optional Amazon Bedrock AI provider

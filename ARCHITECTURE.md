@@ -8,7 +8,7 @@ SecureStack AI is a local-first full-stack security review MVP.
 - **Docker frontend serving:** nginx serves the built frontend and proxies `/api` requests to the backend service inside Docker Compose.
 - **Backend:** Java 21, Spring Boot, DTO-based API layer, scan orchestration services, local persistence, and OpenHTMLToPDF reporting.
 - **Analysis:** Defensive static heuristic rules under `backend/src/main/java/com/securestack/analysis/rules/`.
-- **AI summary:** Mock AI provider by default. Real Bedrock/OpenAI integrations are future/manual setup and are not required for the app to run.
+- **AI summary:** AI provider abstraction with deterministic mock summaries by default and optional Amazon Bedrock summaries through a Bedrock runtime gateway and defensive prompt builder.
 - **CI:** GitHub Actions runs backend tests/package and frontend install/lint/test/build without secrets.
 
 ## Request flow
@@ -17,7 +17,7 @@ SecureStack AI is a local-first full-stack security review MVP.
 2. User creates a scan from pasted or uploaded files.
 3. Frontend sends `POST /api/scans`.
 4. Backend validates untrusted inputs and does not execute uploaded code.
-5. Scan service runs static heuristic rules and mock AI summary generation.
+5. Scan service runs static heuristic rules and asks the configured AI provider for a summary. Mock is default; optional Bedrock uses the prompt builder and Bedrock runtime gateway.
 6. Backend returns a scan ID and DTO response.
 7. Frontend navigates to `/scans/{scanId}` and calls `GET /api/scans/{scanId}`.
 8. User reviews dashboard, filters findings, updates finding status, exports PDF, or opens scan history.
