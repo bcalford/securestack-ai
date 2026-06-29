@@ -57,6 +57,32 @@ Click **Run sample security review** on the landing page or open:
 
 The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, and export the PDF report.
 
+## Screenshots
+
+### Landing page
+
+![Landing page](docs/screenshots/landing-page.png)
+
+### Guided sample review
+
+![Guided sample review](docs/screenshots/sample-review.png)
+
+### Results overview
+
+![Results overview](docs/screenshots/results-overview.png)
+
+### Finding details
+
+![Finding details](docs/screenshots/finding-details.png)
+
+### Scan history
+
+![Scan history](docs/screenshots/scan-history.png)
+
+### PDF report
+
+![PDF report](docs/screenshots/pdf-report.png)
+
 ## Optional Bedrock mode
 
 Mock AI is the default and requires no AWS credentials. Bedrock is optional and configured manually:
