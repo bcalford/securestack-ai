@@ -87,8 +87,8 @@ app.listen(3000);`,
   },
   {
     id: 'full-portfolio-demo',
-    name: 'Full portfolio demo',
-    description: 'Multi-file demo covering fake secrets, API, auth, container, cloud/IaC, and dependency-script risk.',
+    name: 'Comprehensive sample review',
+    description: 'Multi-file sample covering fake secrets, API, auth, container, cloud/IaC, and dependency-script risk.',
     recommendedDepth: 'FULL',
     focusAreas: ['Secrets', 'API security', 'Application security', 'Docker/container security', 'Cloud/IaC', 'Dependencies'],
     files: [

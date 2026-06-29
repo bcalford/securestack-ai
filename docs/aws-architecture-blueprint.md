@@ -11,23 +11,23 @@ SecureStack AI currently implements optional Amazon Bedrock summary generation f
 - `BEDROCK_SEND_RAW_CONTENT=false`: default. The prompt uses scan metadata, masked evidence, filenames, findings, and recommendations rather than raw uploaded source.
 - Normal Docker/local mock mode requires no AWS credentials.
 
-## Future production option A: AWS App Runner
+## Future deployment option A: AWS App Runner
 
-App Runner is the simpler portfolio deployment path because it can run the backend container with less cluster management.
+App Runner can run the backend container with less cluster management than ECS.
 
 - Frontend: S3 + CloudFront for static assets, or containerized nginx if keeping the current Docker serving model.
 - Backend: App Runner service from an Amazon ECR image.
 - Image registry: Amazon ECR.
 - AI: Amazon Bedrock with least-privilege model invocation permissions.
 - Secrets/config: AWS Secrets Manager or SSM Parameter Store for provider settings and database credentials.
-- Persistence: RDS PostgreSQL for production-grade storage instead of local demo persistence.
+- Persistence: RDS PostgreSQL instead of local demo persistence.
 - Logs: CloudWatch Logs.
 - Monitoring: CloudWatch metrics and alarms for error rates, latency, and Bedrock cost signals.
 - CI/CD: GitHub Actions test/build/push/deploy pipeline.
 
-## Future production option B: ECS Fargate
+## Future deployment option B: ECS Fargate
 
-ECS Fargate provides more production control but requires more AWS networking and operations work.
+ECS Fargate provides more infrastructure control but requires more AWS networking and operations work.
 
 - ALB terminates TLS and routes to backend tasks.
 - ECS service runs Fargate tasks from ECR images.
@@ -41,6 +41,6 @@ ECS Fargate provides more production control but requires more AWS networking an
 
 Authentication, authorization, rate limiting, upload abuse protection, strict file size/count limits, request body size limits, Bedrock cost controls, raw-content-to-Bedrock disabled by default, secret masking, private code warnings, logging without secrets, TLS, monitored error rates, dependency scanning, container scanning, least-privilege IAM, and no public unauthenticated scanner without abuse controls are mandatory.
 
-## Deployment status truth
+## Deployment status
 
 This repository is not currently a public production deployment. Production deployment automation remains future work.

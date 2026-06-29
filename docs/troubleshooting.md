@@ -28,17 +28,15 @@ Open `http://localhost:8080/api/health` while Compose is running.
 
 Create or open a valid scan before exporting. PDF generation is designed for defensive report output and escapes user-controlled content before rendering.
 
-## Docker validation note
+## Docker validation
 
-The repository documentation notes that the user validated Docker locally after adding screenshots. If an agent environment does not have Docker installed, do not claim Docker commands passed there; run the Docker commands locally before presenting fresh Docker validation.
-
+Use `docker compose config` to validate the Compose file and `docker compose up --build` to verify the local container workflow. If Docker is unavailable in the current environment, report that limitation instead of claiming Docker validation passed.
 
 ## Optional Amazon Bedrock AI provider
 
 SecureStack AI defaults to `AI_PROVIDER=mock`, which is deterministic, local, and requires no AWS credentials for Docker, tests, or normal development. An optional Bedrock mode can be enabled manually with `AI_PROVIDER=bedrock`, `AWS_REGION`, `BEDROCK_MODEL_ID` (default `amazon.nova-lite-v1:0`), `BEDROCK_MAX_TOKENS`, `BEDROCK_TEMPERATURE`, `BEDROCK_SEND_RAW_CONTENT=false`, and `BEDROCK_TIMEOUT_SECONDS`.
 
 Bedrock prompts are defensive and remediation-focused. By default they send scan metadata, risk score/level, severity and category counts, filenames, finding titles/descriptions, confidence, line numbers, masked evidence, and recommendations. Raw uploaded file contents are not sent unless raw-content mode is explicitly enabled; that experimental mode is not recommended for real secrets, private code, or sensitive customer data. If credentials, region, model access, or model ID are missing, the backend returns a controlled fallback summary while static findings remain available.
-
 
 ## Bedrock Markdown displays as raw syntax
 

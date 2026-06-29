@@ -13,5 +13,5 @@ The `samples/` directory contains small demo projects for exercising SecureStack
 ## Notes
 
 - The app does not execute sample code.
-- The mock AI summary is generated locally and does not call Bedrock/OpenAI.
+- The mock AI summary is generated locally and does not call external AI services.
 - Results can vary as rule text and sample files evolve.

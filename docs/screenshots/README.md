@@ -1,13 +1,12 @@
-# Screenshot Plan
+# Screenshots
 
-Screenshots should be refreshed after final UI freeze.
+This directory contains product screenshots used by the README and project documentation.
 
-Capture:
+Recommended captures:
 
 - Landing page.
-- Sample selector/review form.
-- Mock results dashboard.
-- Bedrock results dashboard.
+- Guided sample review form.
+- Results dashboard.
 - Finding details.
 - Scan history.
 - PDF report.

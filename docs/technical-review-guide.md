@@ -1,8 +1,16 @@
-# Recruiter Review Guide
+# Technical Review Guide
 
-Fast path: run the app, click **Run sample security review**, run the review, inspect **Fix these first**, expand a finding, and export a PDF.
+Use this guide to review the application behavior and code structure quickly.
 
-Code map:
+## Fast path
+
+1. Run the app locally.
+2. Click **Run sample security review**.
+3. Run the review.
+4. Inspect **Fix these first** and expand a finding.
+5. Export a PDF report.
+
+## Code map
 
 - Guided UX and routes: `frontend/src/routes/`, `frontend/src/components/scan/`, `frontend/src/components/findings/`.
 - Demo fixtures: `frontend/src/data/demoSamples.ts`.
@@ -15,4 +23,6 @@ Code map:
 - Security model: `SECURITY_MODEL.md`.
 - Tests: `frontend/src/test/app.test.tsx` and `backend/src/test/java/com/securestack/`.
 
-Limitations: local/demo unauthenticated API, no GitHub scanning, no OpenAI, no Semgrep/SARIF, no multi-user production deployment.
+## Limitations
+
+The app has a local/demo unauthenticated API. It does not include GitHub scanning, OpenAI, Semgrep/SARIF ingestion, public deployment, or multi-user production storage.

@@ -33,7 +33,7 @@ const features = [
   },
   {
     title: 'PDF export',
-    description: 'Creates recruiter-friendly security review reports.',
+    description: 'Creates concise security review reports.',
   },
 ];
 
@@ -95,7 +95,7 @@ export default function LandingPage() {
           <p><b>Risk score</b> with plain-English context.</p>
           <p><b>Fix these first</b> prioritization.</p>
           <p><b>Mock or Bedrock</b> summary badge.</p>
-          <p><b>PDF report</b> for portfolio demos.</p>
+          <p><b>PDF report</b> for completed reviews.</p>
         </aside>
       </section>
 

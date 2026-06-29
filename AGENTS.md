@@ -2,7 +2,7 @@
 
 ## Project goal
 
-Build and maintain SecureStack AI, a production-quality portfolio project that demonstrates full-stack software engineering, AI-assisted analysis, cybersecurity, cloud-readiness, and technical documentation.
+Build and maintain SecureStack AI, a local-first defensive security review application that demonstrates full-stack software engineering, AI-assisted analysis, cybersecurity, cloud-readiness, and technical documentation.
 
 ## Working expectations
 
@@ -25,7 +25,7 @@ Build and maintain SecureStack AI, a production-quality portfolio project that d
 - Keep pages responsive.
 - Use accessible labels and semantic HTML.
 - Keep API types centralized.
-- Keep styling clean, technical, and recruiter-friendly.
+- Keep styling clean, technical, and professional.
 
 ## Backend expectations
 

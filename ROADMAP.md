@@ -4,7 +4,7 @@
 
 - Local Docker Compose runtime.
 - React/TypeScript/Vite frontend and Java 21/Spring Boot backend.
-- Static analysis rules.
+- Defensive static analysis rules.
 - Results dashboard, finding filters/status, scan history, and PDF export.
 - Mock AI by default.
 - Optional manually configured Amazon Bedrock summaries.
