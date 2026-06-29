@@ -1,0 +1,277 @@
+/* Base */
+:root {
+  font-family:Inter ,system-ui ,sans-serif;
+  color:#0f172a;
+  background:#f8fafc;
+  line-height:1.5
+}
+
+.container {
+  max-width:1120px;
+  margin:auto;
+  padding:28px
+}
+
+.nav {
+  display:flex;
+  gap:16px;
+  align-items:center;
+  justify-content:space-between
+}
+
+.grid {
+  display:grid;
+  gap:16px
+}
+
+.cards {
+  grid-template-columns:repeat(auto-fit ,minmax(220px ,1fr))
+}
+
+.card {
+  background:white;
+  border:1px solid #e2e8f0;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 10px 25px #0f172a0a;
+  margin-bottom:16px
+}
+
+.hero-panel ,.results-hero {
+  display:grid;
+  grid-template-columns:minmax(0 ,1.6fr) minmax(260px ,.8fr);
+  gap:24px;
+  align-items:center;
+  background:linear-gradient(135deg ,#ecfeff ,#fff);
+  border:1px solid #bae6fd;
+  border-radius:24px;
+  padding:36px;
+  margin:24px 0
+}
+
+.hero-panel h1 {
+  font-size:clamp(2rem ,4vw ,3.8rem);
+  line-height:1.05;
+  margin:0
+}
+
+.lede {
+  font-size:1.2rem;
+  color:#334155
+}
+
+.actions ,.tab-row {
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap
+}
+
+.btn {
+  background:#0f766e;
+  color:white;
+  padding:11px 16px;
+  border-radius:10px;
+  border:0;
+  text-decoration:none;
+  display:inline-block;
+  font-weight:700;
+  cursor:pointer
+}
+
+.secondary {
+  background:#e2e8f0;
+  color:#0f172a
+}
+
+.badge {
+  padding:4px 9px;
+  border-radius:999px;
+  background:#e0f2fe;
+  margin:4px;
+  display:inline-block;
+  font-size:.85rem;
+  font-weight:700
+}
+
+.sev-CRITICAL {
+  background:#7f1d1d;
+  color:white
+}
+
+.sev-HIGH {
+  background:#dc2626;
+  color:white
+}
+
+.sev-MEDIUM {
+  background:#f59e0b;
+  color:#111827
+}
+
+.sev-LOW {
+  background:#22c55e;
+  color:#052e16
+}
+
+.sev-INFO {
+  background:#94a3b8;
+  color:#0f172a
+}
+
+.input ,textarea ,select {
+  width:100%;
+  padding:10px;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  margin-top:4px
+}label {
+  display:block;
+  font-weight:700;
+  margin:10px 0
+}
+
+.helper {
+  color:#475569;
+  font-weight:400
+}
+
+.preview ,.score-card {
+  background:#0f172a;
+  color:#e2e8f0;
+  border-radius:18px;
+  padding:24px
+}
+
+.score-card {
+  text-align:center
+}
+
+.score-card strong {
+  display:block;
+  font-size:4rem
+}a {
+  color:#0f766e
+}button:focus ,a:focus ,input:focus ,textarea:focus ,select:focus {
+  outline:3px solid #67e8f9
+}
+
+.summary-card {
+  margin:20px 0
+}
+
+.eyebrow {
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:.78rem;
+  font-weight:800;
+  color:#475569
+}
+
+.preview .eyebrow {
+  color:#bae6fd
+}
+
+.markdown-summary {
+  color:#334155;
+  line-height:1.6
+}
+
+.markdown-summary h1 ,.markdown-summary h2 ,.markdown-summary h3 ,.markdown-summary h4 ,.markdown-summary h5 ,.markdown-summary h6 {
+  color:#0f172a;
+  margin:12px 0 6px
+}
+
+.markdown-summary p {
+  margin:0 0 10px
+}
+
+.markdown-summary ul ,.markdown-summary ol {
+  margin:0 0 12px 22px;
+  padding:0
+}
+
+.markdown-summary code {
+  background:#e2e8f0;
+  border-radius:6px;
+  padding:2px 5px
+}
+
+.markdown-summary pre {
+  background:#0f172a;
+  color:#e2e8f0;
+  border-radius:12px;
+  overflow:auto;
+  padding:12px
+}
+
+.review-form h2 {
+  margin-top:0
+}
+
+.subtle {
+  background:#f8fafc
+}
+
+.risk-explanation {
+  font-size:1.15rem;
+  color:#334155
+}
+
+.fix-first {
+  border-left:6px solid #0f766e
+}
+
+.finding-card header h3 {
+  margin:.4rem 0
+}
+
+.rule-id {
+  color:#64748b;
+  font-size:.9rem
+}
+
+.empty-state {
+  background:#f8fafc;
+  color:#475569
+}
+
+.error {
+  background:#fee2e2;
+  color:#991b1b;
+  border:1px solid #fecaca;
+  border-radius:10px;
+  padding:12px
+}
+
+@media(max-width:760px) {
+  .hero-panel ,.results-hero {
+  grid-template-columns:1fr;
+  padding:22px
+}
+
+.container {
+  padding:16px
+}
+}
+
+
+/* Findings */
+.finding-details {
+  margin-top: 12px;
+}
+
+.finding-detail-row {
+  margin: 12px 0;
+}
+
+.finding-detail-row dt {
+  font-weight: 800;
+}
+
+.finding-detail-row dd {
+  margin: 4px 0 0;
+}
+
+.mode-panel {
+  margin: 14px 0;
+}
