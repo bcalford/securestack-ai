@@ -84,7 +84,10 @@ public class ScanService {
         List<ScanFileInput> files = new ArrayList<>();
         if (pastedJson != null && !pastedJson.isBlank()) {
             for (PastedFile pasted : Arrays.asList(mapper.readValue(pastedJson, PastedFile[].class))) {
-                if (pasted.content() != null && !pasted.content().isBlank()) files.add(new ScanFileInput(pasted.fileName(), pasted.fileType(), pasted.content()));
+                if (pasted.content() != null && !pasted.content().isBlank()) {
+                    files.add(new ScanFileInput(pasted.fileName(), pasted.fileType(), pasted.content()));
+                    ensureWithinMaxFiles(files);
+                }
             }
         }
         if (uploads != null) for (MultipartFile upload : uploads) {
@@ -98,14 +101,22 @@ public class ScanService {
                         String entryName = safeName(entry.getName());
                         byte[] bytes = zis.readNBytes(maxBytes() + 1);
                         files.add(new ScanFileInput(entryName, type(entryName), decodeText(bytes, entryName)));
+                        ensureWithinMaxFiles(files);
                     }
                 }
             } else {
                 byte[] bytes = upload.getBytes();
                 files.add(new ScanFileInput(original, type(original), decodeText(bytes, original)));
+                ensureWithinMaxFiles(files);
             }
         }
         return files;
+    }
+
+    private void ensureWithinMaxFiles(List<ScanFileInput> files) {
+        if (files.size() > properties.getMaxScanFiles()) {
+            throw new IllegalArgumentException("Too many files; maximum is " + properties.getMaxScanFiles() + ".");
+        }
     }
 
     private boolean enabled(SecurityRule rule, ReviewDepth depth, Set<Category> focus) {
