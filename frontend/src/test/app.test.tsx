@@ -152,6 +152,27 @@ describe('scan form', () => {
   });
 });
 
+
+describe('about and sample report pages', () => {
+  test('about page links to the static sample report', () => {
+    renderPath('/about');
+
+    expect(screen.getByRole('link', { name: /static sample report/i })).toHaveAttribute('href', '/sample-report');
+  });
+
+  test('sample report renders real report content', () => {
+    renderPath('/sample-report');
+
+    expect(screen.getByRole('heading', { name: 'SecureStack AI Demo Portfolio Review' })).toBeInTheDocument();
+    expect(screen.getAllByText('Risk score')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('78')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Demo API token committed in client configuration')[0]).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Methodology' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Limitations' })).toBeInTheDocument();
+    expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
+  });
+});
+
 describe('results page', () => {
   test('risk, provider, fix-first, markdown summary, findings, and supplied details render', async () => {
     mockScanResponse();
