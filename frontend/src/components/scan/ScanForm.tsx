@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { createScan } from '../../api/client';
+import { createGitHubScan, createScan } from '../../api/client';
 import { demoSamples, getDemoSample } from '../../data/demoSamples';
 import type { PastedFile } from '../../types';
 import FocusAreaSelector from './FocusAreaSelector';
 import PastedFileEditor from './PastedFileEditor';
 
-type ScanInputMode = 'paste' | 'upload' | 'sample';
+type ScanInputMode = 'paste' | 'upload' | 'sample' | 'github';
 
 const emptyPastedFile: PastedFile = {
   fileName: 'app.js',
@@ -16,6 +16,21 @@ const emptyPastedFile: PastedFile = {
 
 function validPastedFiles(files: PastedFile[]) {
   return files.filter(file => file.fileName.trim() && file.content.trim());
+}
+
+function isValidGitHubRepositoryUrl(value: string) {
+  try {
+    const url = new URL(value);
+    const parts = url.pathname.split('/').filter(Boolean);
+    return url.protocol === 'https:'
+      && url.hostname.toLowerCase() === 'github.com'
+      && !url.username
+      && !url.password
+      && (parts.length === 2 || (parts.length >= 4 && parts[2] === 'tree'))
+      && parts.every(part => part !== '..' && part !== '.');
+  } catch {
+    return false;
+  }
 }
 
 export default function ScanForm() {
@@ -28,6 +43,7 @@ export default function ScanForm() {
   const [selectedSample, setSelectedSample] = useState(initialSample.id);
   const [files, setFiles] = useState<PastedFile[]>(startsWithSample ? initialSample.files : [emptyPastedFile]);
   const [depth, setDepth] = useState(initialSample.recommendedDepth);
+  const [githubUrl, setGithubUrl] = useState('');
   const [err, setErr] = useState('');
 
   const sample = getDemoSample(selectedSample);
@@ -58,8 +74,35 @@ export default function ScanForm() {
     const uploadInput = event.currentTarget.elements.namedItem('files') as HTMLInputElement | null;
     const uploadCount = uploadInput?.files?.length ?? 0;
 
+    if (mode === 'github') {
+      const trimmedUrl = githubUrl.trim();
+      if (!isValidGitHubRepositoryUrl(trimmedUrl)) {
+        setErr('Enter a valid public GitHub repository URL, such as https://github.com/owner/repo.');
+        return;
+      }
+
+      const formData = new FormData(event.currentTarget);
+      try {
+        const response = await createGitHubScan({
+          repositoryUrl: trimmedUrl,
+          scanName: String(formData.get('scanName') || 'GitHub repository review'),
+          reviewDepth: depth,
+          focusAreas: formData.getAll('focusAreas').map(String).join(','),
+        });
+        nav(`/scans/${response.scanId}`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '';
+        if (/download|import|fetch|archive/i.test(message)) {
+          setErr('GitHub repository download failed. Confirm the public repository exists and try again.');
+        } else {
+          setErr('GitHub repository validation failed. Confirm the URL points to a supported public GitHub repository.');
+        }
+      }
+      return;
+    }
+
     if (validFiles.length === 0 && uploadCount === 0) {
-      setErr('Add at least one valid pasted, uploaded, or sample file with a name and content before running the review.');
+      setErr('Add at least one valid pasted, uploaded, sample, or GitHub URL input before running the review.');
       return;
     }
 
@@ -94,7 +137,7 @@ export default function ScanForm() {
       <section className="card">
         <h2>Step 2: Add files</h2>
         <p className="helper">
-          Choose pasted source, local uploads, or safe demo samples. Demo fixtures are intentionally vulnerable and use fake secrets only.
+          Choose pasted source, local uploads, safe demo samples, or a public GitHub repository URL. Demo fixtures are intentionally vulnerable and use fake secrets only.
         </p>
 
         <div className="tab-row" aria-label="File input mode">
@@ -106,6 +149,9 @@ export default function ScanForm() {
           </button>
           <button type="button" className={`btn ${mode === 'sample' ? '' : 'secondary'}`} onClick={() => switchMode('sample')}>
             Use sample
+          </button>
+          <button type="button" className={`btn ${mode === 'github' ? '' : 'secondary'}`} onClick={() => switchMode('github')}>
+            GitHub URL
           </button>
         </div>
 
@@ -140,11 +186,32 @@ export default function ScanForm() {
           </div>
         )}
 
+        {mode === 'github' && (
+          <div className="mode-panel">
+            <label>
+              Public GitHub repository URL
+              <input
+                className="input"
+                name="repositoryUrl"
+                type="url"
+                value={githubUrl}
+                onChange={event => setGithubUrl(event.target.value)}
+                placeholder="https://github.com/owner/repo"
+              />
+            </label>
+            <ul className="helper">
+              <li>Public GitHub repositories only; private repositories are not supported.</li>
+              <li>Analysis runs locally after import. No token is needed.</li>
+              <li>Uploaded or imported code is not executed.</li>
+            </ul>
+          </div>
+        )}
+
         {mode === 'paste' && (
           <p className="helper">Paste one or more source/config files. Blank placeholder rows are ignored.</p>
         )}
 
-        {mode !== 'upload' && (
+        {mode !== 'upload' && mode !== 'github' && (
           <>
             <PastedFileEditor files={visiblePastedFiles} setFiles={setFiles} />
             <button
@@ -180,8 +247,8 @@ export default function ScanForm() {
       <section className="card">
         <h2>Step 4: Run review</h2>
         <p>
-          <b>Ready:</b> {validFiles.length} pasted/sample file(s)
-          {mode === 'upload' ? ' plus selected uploads' : ''} · {mode === 'sample' ? sample.name : 'manual input'} · {depth} depth.
+          <b>Ready:</b> {mode === 'github' ? (githubUrl.trim() ? 'GitHub URL provided' : 'waiting for GitHub URL') : `${validFiles.length} pasted/sample file(s)`}
+          {mode === 'upload' ? ' plus selected uploads' : ''} · {mode === 'sample' ? sample.name : mode === 'github' ? 'public repository import' : 'manual input'} · {depth} depth.
         </p>
         <p className="helper">PDF export is available from the results page after the review is created.</p>
         <p><button className="btn">Run security review</button></p>

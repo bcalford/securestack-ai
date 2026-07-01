@@ -1,6 +1,6 @@
 # SARIF export
 
-SecureStack AI can export completed scan findings as SARIF 2.1.0 JSON for local review and tool interoperability experiments.
+SecureStack AI can export completed scan findings as SARIF 2.1.0 JSON for local review and tool interoperability experiments. It does not import SARIF and does not upload SARIF to GitHub code scanning.
 
 ## How to download
 
@@ -38,5 +38,5 @@ If a finding has no severity, the export uses `warning`.
 
 - SARIF support is export-only.
 - SARIF import is not implemented.
-- GitHub code scanning upload, repository scanning, and automation are not implemented.
-- Semgrep integration or Semgrep SARIF ingestion is not implemented.
+- GitHub code scanning upload and automation are not implemented.
+- Semgrep execution/integration and Semgrep SARIF ingestion are not implemented.

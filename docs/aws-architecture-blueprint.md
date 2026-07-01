@@ -43,4 +43,4 @@ Authentication, authorization, rate limiting, upload abuse protection, strict fi
 
 ## Deployment status
 
-This repository is not currently a public production deployment. Production deployment automation remains future work.
+This repository is not currently a public production deployment or hosted scanner. Production AWS deployment automation remains future work.

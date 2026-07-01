@@ -1,15 +1,16 @@
 # SecureStack AI
 
-SecureStack AI is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and PDF/SARIF report export.
+SecureStack AI v0.3-alpha is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and PDF/SARIF report export.
 
 ## Features
 
-- Guided scan creation from pasted files, uploaded files/ZIP archives, or built-in safe demo samples.
-- Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns.
-- Risk scoring, severity/category breakdowns, and prioritized findings.
-- Finding details with evidence, remediation guidance, secure examples, status updates, and rule IDs.
+- Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis of public-only repositories.
+- Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns, with a backend/frontend rule catalog.
+- Risk scoring, severity/category breakdowns, prioritized findings, and local comparison between completed scans.
+- Finding details with evidence, remediation guidance, secure examples, status updates, remediation workflow counts, and rule IDs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
-- PDF report export and SARIF 2.1.0 JSON export for completed reviews.
+- Real sample report page, PDF report export, and SARIF 2.1.0 JSON export for completed reviews.
+- One-command local validation, duplicate/copy artifact guardrails, and GitHub Actions CI validation.
 
 ## Tech stack
 
@@ -27,6 +28,24 @@ docker compose up --build
 ```
 
 Open `http://localhost:5173` and run the guided sample review.
+
+## Local validation
+
+Run the full local validation workflow with one command:
+
+```bash
+./scripts/validate-all.sh
+make validate
+```
+
+For a faster loop that skips backend packaging and frontend production build:
+
+```bash
+./scripts/validate-all.sh --quick
+make validate-quick
+```
+
+The validation workflow includes duplicate/copy-file guardrails, conservative secret-safety checks, backend tests, frontend lint/tests/build, and Docker Compose configuration checks. GitHub Actions CI mirrors these validation categories for pushes and pull requests to `main`. The duplicate-file guard detects common accidental duplicate names such as `2.java`, `3.tsx`, `copy.*`, `*.orig`, and `*.rej`; it reports matches without deleting files or claiming to know their root cause. Optional local pre-commit hooks can be installed with `./scripts/install-hooks.sh`.
 
 ## Local development
 
@@ -55,7 +74,7 @@ Click **Run sample security review** on the landing page or open:
 /scans/new?sample=full-portfolio-demo
 ```
 
-The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, and export PDF or SARIF from the results page.
+The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, review the remediation workflow summary, compare completed scans from scan history, and export PDF or SARIF from the results page. The sample report page provides a realistic report-style view for demos without claiming to be a hosted scanner.
 
 ## Screenshots
 
@@ -97,6 +116,13 @@ mvn spring-boot:run
 
 Keep `BEDROCK_SEND_RAW_CONTENT=false` for private code and sample reviews. Do not commit credentials or use real secrets in sample files.
 
+## Documentation
+
+- [Rule catalog](docs/rule-catalog.md)
+- [Technical review guide](docs/technical-review-guide.md)
+- [Security model](SECURITY_MODEL.md)
+- [Architecture](ARCHITECTURE.md)
+
 ## Architecture
 
 The frontend submits pasted or uploaded files to the backend scan API. The backend validates untrusted inputs, rejects unsafe paths and unsupported/binary/oversized files, expands ZIP files safely, runs rule-based analysis, stores scan and finding metadata locally, generates a mock or Bedrock summary, and serves results plus PDF and SARIF exports.
@@ -116,10 +142,10 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 ## Limitations
 
 - No authentication or authorization.
-- No public deployment or hosted demo.
-- No GitHub repository scanning.
+- No public deployment or hosted scanner.
+- Public GitHub URL import is limited to unauthenticated public repositories; there is no private repo support, OAuth flow, token handling, GitHub App, or GitHub code scanning integration.
 - No OpenAI provider.
-- No Semgrep integration or SARIF import/code-scanning integration; SARIF support is export-only.
+- No Semgrep execution or integration. SARIF support is export-only; SARIF import and GitHub code scanning upload/automation are not implemented.
 - No multi-user production storage.
 - No production AWS deployment automation.
 
@@ -129,6 +155,9 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`SECURITY_MODEL.md`](SECURITY_MODEL.md)
 - [`ROADMAP.md`](ROADMAP.md)
 - [`docs/local-validation.md`](docs/local-validation.md)
+- [`docs/github-url-import.md`](docs/github-url-import.md)
+- [`docs/scan-comparison.md`](docs/scan-comparison.md)
+- [`docs/rule-catalog.md`](docs/rule-catalog.md)
 - [`docs/sarif-export.md`](docs/sarif-export.md)
 - [`docs/postgres-profile.md`](docs/postgres-profile.md)
 - [`docs/demo-script.md`](docs/demo-script.md)
@@ -137,3 +166,4 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`docs/troubleshooting.md`](docs/troubleshooting.md)
 - [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md)
 - [`docs/deployment-aws.md`](docs/deployment-aws.md)
+- [`docs/v0.3-release-notes.md`](docs/v0.3-release-notes.md)

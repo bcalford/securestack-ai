@@ -1,4 +1,4 @@
-import type { Scan, ScanListItem } from '../types';
+import type { RuleCatalogItem, Scan, ScanListItem } from '../types';
 
 const API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -16,6 +16,21 @@ export async function createScan(form: FormData) {
   return response.json() as Promise<{ scanId: string }>;
 }
 
+export async function createGitHubScan(request: {
+  repositoryUrl: string;
+  scanName: string;
+  reviewDepth: string;
+  focusAreas: string;
+}) {
+  const response = await fetch(`${API}/scans/github`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...request, generatePdf: false }),
+  });
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<{ scanId: string }>;
+}
+
 export async function getScan(id: string) {
   const response = await fetch(`${API}/scans/${id}`);
   if (!response.ok) throw new Error(await parseError(response));
@@ -26,6 +41,12 @@ export async function listScans() {
   const response = await fetch(`${API}/scans`);
   if (!response.ok) throw new Error(await parseError(response));
   return response.json() as Promise<ScanListItem[]>;
+}
+
+export async function listRules() {
+  const response = await fetch(`${API}/rules`);
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<RuleCatalogItem[]>;
 }
 
 export async function updateFindingStatus(scanId: string, findingId: string, status: string) {

@@ -302,3 +302,40 @@ label {
     padding: 16px;
   }
 }
+
+.comparison-picker,
+.history-row,
+.comparison-list,
+.remediation-status {
+  margin-bottom: 1rem;
+}
+
+.history-row label,
+.comparison-list .badge {
+  margin-right: 0.5rem;
+}
+
+.comparison-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.delta-up {
+  color: #dc2626;
+}
+
+.delta-down {
+  color: #16a34a;
+}
+
+.btn.disabled {
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+.remediation-status article {
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.75rem;
+}

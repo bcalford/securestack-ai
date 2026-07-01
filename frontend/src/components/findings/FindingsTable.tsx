@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { updateFindingStatus } from '../../api/client';
 import type { Finding } from '../../types';
-import { sortFindingsByPriority } from '../../utils/risk';
 import FindingDetails from './FindingDetails';
 
 type FindingsTableProps = {
@@ -14,7 +13,7 @@ export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    setLocal(sortFindingsByPriority(rows));
+    setLocal(rows);
   }, [rows]);
 
   async function changeStatus(finding: Finding, status: string) {

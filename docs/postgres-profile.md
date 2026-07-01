@@ -2,7 +2,7 @@
 
 SecureStack AI runs with the default H2 in-memory database and mock AI provider when you use the base Docker Compose file. The PostgreSQL Compose override is an optional local development mode for checking database-backed scan history without changing the normal demo path.
 
-This mode is local-only. The bundled credentials are development defaults, not real secrets, and must not be reused for shared, staged, or production environments. This setup is not multi-user production hardening and does not claim production migration management.
+This mode is local-only and supports validation of local scan-history persistence; it is not a production database architecture. The bundled credentials are development defaults, not real secrets, and must not be reused for shared, staged, or production environments. This setup is not multi-user production hardening and does not claim production migration management.
 
 ## Start PostgreSQL mode
 

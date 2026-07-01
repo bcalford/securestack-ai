@@ -16,7 +16,7 @@ public class SarifService {
     private static final String SARIF_VERSION = "2.1.0";
     private static final String SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json";
     private static final String TOOL_NAME = "SecureStack AI";
-    private static final String INFORMATION_URI = "https://github.com/securestack-ai/securestack-ai";
+    private static final String INFORMATION_URI = "https://github.com/bcalford/securestack-ai";
 
     private final ScanService scans;
 

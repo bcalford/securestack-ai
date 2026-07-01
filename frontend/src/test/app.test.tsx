@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
 import type { Finding, Scan } from '../types';
 import { topPriorityFindings } from '../utils/risk';
+import { compareScans } from '../utils/scanComparison';
 
 const scan: Scan = {
   id: 'scan-1',
@@ -143,12 +144,220 @@ describe('scan form', () => {
     expect(within(selector).getByRole('option', { name: 'Insecure Terraform' })).toBeInTheDocument();
   });
 
+
+
+  test('GitHub URL mode renders local-only public repository guidance', () => {
+    renderPath('/scans/new');
+
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+
+    expect(screen.getByLabelText('Public GitHub repository URL')).toBeInTheDocument();
+    expect(screen.getByText(/Public GitHub repositories only/i)).toBeInTheDocument();
+    expect(screen.getByText(/Analysis runs locally after import/i)).toBeInTheDocument();
+    expect(screen.getByText(/No token is needed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Uploaded or imported code is not executed/i)).toBeInTheDocument();
+  });
+
+  test('entering a GitHub URL submits the expected repositoryUrl field', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-github' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+    fireEvent.change(screen.getByLabelText('Public GitHub repository URL'), {
+      target: { value: 'https://github.com/securestack/demo' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      '/api/scans/github',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: expect.any(String),
+      }),
+    ));
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(String(init?.body))).toEqual(expect.objectContaining({
+      repositoryUrl: 'https://github.com/securestack/demo',
+      reviewDepth: 'STANDARD',
+      generatePdf: false,
+    }));
+  });
+
+  test('paste mode still submits valid pasted files', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-paste' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.change(screen.getByLabelText('Paste text'), { target: { value: 'const ok = true;' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));
+    const [, init] = fetchMock.mock.calls[0];
+    const form = init?.body as FormData;
+    expect(form.get('pastedFiles')).toContain('const ok = true;');
+  });
+
+  test('upload mode still submits selected files', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-upload' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'Upload files' }));
+    fireEvent.change(screen.getByLabelText('Upload files or ZIP'), {
+      target: { files: [new File(['FROM node:20'], 'Dockerfile', { type: 'text/plain' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));
+  });
+
+  test('sample mode still submits preloaded sample files', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-sample' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'Use sample' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));
+    const [, init] = fetchMock.mock.calls[0];
+    const form = init?.body as FormData;
+    expect(String(form.get('pastedFiles'))).toContain('server.js');
+  });
+
+  test('invalid empty submit remains controlled', () => {
+    renderPath('/scans/new');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Add at least one valid pasted, uploaded, sample, or GitHub URL input/i);
+  });
+
+  test('invalid GitHub URL submit remains controlled without backend details', async () => {
+    renderPath('/scans/new');
+
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+    fireEvent.change(screen.getByLabelText('Public GitHub repository URL'), { target: { value: 'http://example.com/repo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Enter a valid public GitHub repository URL/i);
+  });
+
+  test('no private repository or OAuth support claims appear', () => {
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+
+    expect(screen.queryByText(/OAuth/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/private repo support/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/private repository support/i)).not.toBeInTheDocument();
+  });
+
   test('sample URL param opens sample mode and preloads the full portfolio sample', () => {
     renderPath('/scans/new?sample=full-portfolio-demo');
 
     expect(screen.getByLabelText('Sample review')).toHaveValue('full-portfolio-demo');
     expect(screen.getByLabelText('Review name')).toHaveValue('Comprehensive sample review');
     expect(screen.getByDisplayValue('server.js')).toBeInTheDocument();
+  });
+});
+
+
+describe('about and sample report pages', () => {
+  test('about page links to the static sample report', () => {
+    renderPath('/about');
+
+    expect(screen.getByRole('link', { name: /static sample report/i })).toHaveAttribute('href', '/sample-report');
+  });
+
+  test('sample report renders real report content', () => {
+    renderPath('/sample-report');
+
+    expect(screen.getByRole('heading', { name: 'SecureStack AI Demo Portfolio Review' })).toBeInTheDocument();
+    expect(screen.getAllByText('Risk score')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('78')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Demo API token committed in client configuration')[0]).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Methodology' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Limitations' })).toBeInTheDocument();
+    expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
+  });
+});
+
+
+
+describe('scan comparison', () => {
+  const newerScan: Scan = {
+    ...scan,
+    id: 'scan-2',
+    name: 'Follow-up review',
+    riskScore: 70,
+    findingCount: 2,
+    findings: [
+      { ...scan.findings[0], severity: 'CRITICAL' },
+      {
+        id: 'finding-3',
+        fileName: 'api.js',
+        lineNumber: 8,
+        title: 'Missing rate limiting',
+        description: 'Endpoint has no throttling.',
+        severity: 'LOW',
+        category: 'API_SECURITY',
+        confidence: 'MEDIUM',
+        evidence: 'app.post("/login")',
+        recommendation: 'Add rate limiting.',
+        secureExample: 'rateLimit({ windowMs: 60000 })',
+        status: 'OPEN',
+        ruleId: 'API-004',
+      },
+    ],
+    severityCounts: { CRITICAL: 1, LOW: 1 },
+    categoryCounts: { SECRETS: 1, API_SECURITY: 1 },
+  };
+
+  test('comparison helper identifies new, resolved, unchanged, and changed findings', () => {
+    const comparison = compareScans(scan, newerScan);
+
+    expect(comparison.riskScoreDelta).toBe(-10);
+    expect(comparison.findingCountDelta).toBe(0);
+    expect(comparison.newFindings.map(item => item.right?.title)).toContain('Missing rate limiting');
+    expect(comparison.resolvedFindings.map(item => item.left?.title)).toContain('Wildcard CORS policy');
+    expect(comparison.changedFindings.map(item => item.right?.title)).toContain('Hardcoded credential');
+    expect(comparison.unchangedFindings).toHaveLength(0);
+  });
+
+  test('compare page renders two scan names and risk delta', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(newerScan), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    renderPath('/scans/compare?left=scan-1&right=scan-2');
+
+    expect(await screen.findByText('Demo review')).toBeInTheDocument();
+    expect(screen.getByText('Follow-up review')).toBeInTheDocument();
+    expect(screen.getByText('-10')).toBeInTheDocument();
+  });
+
+  test('scan history allows selecting two scans for comparison', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([scan, newerScan]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    const checks = await screen.findAllByLabelText('Select for comparison');
+    fireEvent.click(checks[0]);
+    fireEvent.click(checks[1]);
+
+    expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('href', '/scans/compare?left=scan-1&right=scan-2');
   });
 });
 
@@ -270,6 +479,33 @@ describe('results page', () => {
     expect(screen.getByText(/No findings match the current filters/)).toBeInTheDocument();
   });
 
+  test('results page status summary renders', async () => {
+    mockScanResponse({ ...scan, findings: [scan.findings[0], { ...scan.findings[1], status: 'FIXED' }] });
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findByRole('heading', { name: 'Remediation workflow' })).toBeInTheDocument();
+    expect(screen.getByText('Open findings')).toBeInTheDocument();
+    expect(screen.getByText('Fixed findings')).toBeInTheDocument();
+  });
+
+  test('confidence filtering and status sorting work', async () => {
+    mockScanResponse({ ...scan, findings: [scan.findings[0], { ...scan.findings[1], confidence: 'MEDIUM', status: 'FIXED' }] });
+    renderPath('/scans/scan-1');
+
+    await screen.findAllByText('Hardcoded credential');
+    fireEvent.change(screen.getByLabelText('Filter confidence'), { target: { value: 'MEDIUM' } });
+
+    const findingList = screen.getByLabelText('Finding details');
+    expect(within(findingList).queryByText('Hardcoded credential')).not.toBeInTheDocument();
+    expect(within(findingList).getByText('Wildcard CORS policy')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Filter confidence'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Sort findings'), { target: { value: 'status' } });
+
+    const headings = screen.getAllByRole('heading', { level: 3 }).map(heading => heading.textContent);
+    expect(headings).toEqual(expect.arrayContaining(['Hardcoded credential', 'Wildcard CORS policy']));
+  });
+
   test('finding status update behavior calls the API without reloading from the network', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input, init) => (
       init?.method === 'PATCH'
@@ -305,4 +541,70 @@ describe('results page', () => {
 
 test('results top findings sorts correctly', () => {
   expect(topPriorityFindings(scan.findings as Finding[])[0].title).toBe('Hardcoded credential');
+});
+describe('rule catalog page', () => {
+  const rules = [
+    {
+      id: 'API-001',
+      title: 'Wildcard CORS policy',
+      category: 'API_SECURITY',
+      severity: 'MEDIUM',
+      description: 'Detects wildcard CORS origins.',
+      recommendation: 'Restrict CORS to trusted origins.',
+      reviewDepthBehavior: 'Runs in STANDARD and FULL review depths unless filtered by focus area.',
+    },
+    {
+      id: 'SEC-001',
+      title: 'Secret detection',
+      category: 'SECRETS',
+      severity: 'HIGH',
+      description: 'Detects committed credentials.',
+      recommendation: 'Rotate exposed credentials and use a managed secret store.',
+      reviewDepthBehavior: 'Runs in QUICK, STANDARD, and FULL review depths unless filtered by focus area.',
+    },
+  ];
+
+  test('/rules renders rule catalog with mocked API rules', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    expect(screen.getByRole('heading', { name: 'Rule Catalog' })).toBeInTheDocument();
+    expect(await screen.findByText('Secret detection')).toBeInTheDocument();
+    expect(screen.getByText('API-001')).toBeInTheDocument();
+  });
+
+  test('/rules search filters rendered rules', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    fireEvent.change(screen.getByLabelText('Search rules'), { target: { value: 'cors' } });
+
+    expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
+    expect(screen.queryByText('Secret detection')).not.toBeInTheDocument();
+  });
+
+  test('/rules shows controlled empty and error states', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+    expect(await screen.findByText('No rules are currently published in the catalog.')).toBeInTheDocument();
+
+    vi.restoreAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'backend detail' }), { status: 500, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load rule catalog.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
 });

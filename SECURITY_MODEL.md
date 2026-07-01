@@ -4,12 +4,12 @@ SecureStack AI is designed for defensive local analysis.
 
 ## Boundaries
 
-The API is unauthenticated and intended for local/demo use only. Uploaded and pasted files are untrusted. The backend validates file constraints and never executes uploaded code.
+The API is unauthenticated and intended for local/demo use only. Uploaded files, pasted files, ZIP archives, and public GitHub URL imports are untrusted. The backend validates file constraints and never executes uploaded code.
 
 ## Implemented controls
 
-- Static heuristic rule classes only; no dynamic execution.
-- File size/count/type validation and ZIP safety protections in backend processing.
+- Static heuristic rule classes only; no dynamic execution and no Semgrep execution.
+- File size/count/type validation, public GitHub URL validation, and ZIP safety protections in backend processing.
 - Secret-like evidence masking.
 - Raw file storage disabled by default.
 - Mock AI default; Bedrock raw content disabled by default.
@@ -25,4 +25,4 @@ Do not expose this application publicly as-is. Any public deployment would requi
 
 ## Not implemented
 
-Authentication, authorization, public deployment, GitHub scanning, OpenAI, Semgrep integration, SARIF import/ingestion, multi-user production storage, and deployment automation are not implemented.
+Authentication, authorization, public deployment/hosted scanning, private GitHub repository support, GitHub code scanning upload/automation, OpenAI, Semgrep execution/integration, SARIF import/ingestion, multi-user production storage, and production AWS deployment automation are not implemented.
