@@ -65,7 +65,7 @@ If `AI_PROVIDER=bedrock` is selected but Bedrock cannot be invoked, static findi
 
 ## SARIF download issues
 
-Create or open a valid scan before downloading SARIF. The endpoint is `GET /api/scans/{scanId}/sarif`; a missing scan ID returns the same not-found behavior as other scan lookups. SARIF support is export-only and does not upload to GitHub code scanning automatically.
+Create or open a valid scan before downloading SARIF. The endpoint is `GET /api/scans/{scanId}/sarif`; a missing scan ID returns the same not-found behavior as other scan lookups. SARIF support is export-only. SARIF import and GitHub code scanning upload/automation are not implemented.
 
 ## Optional PostgreSQL mode issues
 
