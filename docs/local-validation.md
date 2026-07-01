@@ -1,6 +1,47 @@
 # Local Validation
 
-Use these commands to verify the local application before sharing changes.
+Use these commands to verify the local application before sharing changes. The preferred path is the one-command validation script or matching Make targets.
+
+## One-command validation
+
+```bash
+./scripts/validate-all.sh
+make validate
+```
+
+For a faster local loop that skips backend packaging and frontend production build, run:
+
+```bash
+./scripts/validate-all.sh --quick
+make validate-quick
+```
+
+Use `./scripts/validate-all.sh --skip-docker` when Docker is unavailable and you need to run the non-Docker checks only.
+
+The validation script runs duplicate-file guardrails, secret-safety checks, backend tests, backend packaging unless `--quick` is set, frontend dependency installation if `node_modules` is missing, frontend lint/tests/build unless `--quick` is set, and Docker Compose configuration checks unless `--skip-docker` is set.
+
+## Guardrail checks
+
+```bash
+./scripts/check-duplicates.sh
+./scripts/check-secrets.sh
+make check-duplicates
+make check-secrets
+```
+
+`check-duplicates.sh` detects common accidental duplicate/copy artifacts including `2.java`, `2.ts`, `2.tsx`, `2.css`, `2.json`, `2.md`, `2.yml`, `2.yaml`, `3.java`, `3.ts`, `3.tsx`, `copy.*`, `Copy.*`, `*.orig`, and `*.rej`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
+
+`check-secrets.sh` performs conservative high-confidence checks for AWS access keys, private key headers, and obvious credential assignments while excluding known fake demo fixtures such as `frontend/src/data/demoSamples.ts` and `samples/**`.
+
+## Optional local pre-commit hook
+
+Install duplicate and secret guardrails as a local pre-commit hook with:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+The installer writes `.git/hooks/pre-commit`. If an unrelated pre-existing hook is present, it backs it up before installing the SecureStack AI hook.
 
 ## Backend
 
@@ -94,10 +135,11 @@ Then run the frontend dev server, submit the guided sample review, and confirm t
 
 ## Secret-safety checks
 
+Prefer the scripted check so local validation and Make targets use the same conservative patterns and fixture exclusions:
+
 ```bash
-git grep -n -i "AKIA[0-9A-Z]\\{12,\\}"
-git grep -n -i "api[_-]\\?key\\|password\\|secret\\|token" -- ':!frontend/src/data/demoSamples.ts' ':!samples'
-git grep -n "rehypeRaw\\|dangerouslySetInnerHTML"
+./scripts/check-secrets.sh
+make check-secrets
 ```
 
-Review any matches manually. Sample fixtures may contain fake demo-only secret strings.
+Review any matches manually. Sample fixtures may contain fake demo-only secret strings and are intentionally excluded from this guard.

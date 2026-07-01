@@ -16,6 +16,22 @@ docker compose up
 
 In Docker, nginx serves the frontend and proxies `/api` to the `backend` service. Do not depend on a runtime `VITE_API_BASE_URL` inside the built Vite app.
 
+## Local validation script failures
+
+Run `./scripts/validate-all.sh` or `make validate` from the repository root. Use `./scripts/validate-all.sh --quick` or `make validate-quick` for a faster loop that skips backend packaging and frontend production build. If Docker is unavailable, use `./scripts/validate-all.sh --skip-docker` and report the Docker limitation separately.
+
+## Duplicate-file guard failures
+
+`./scripts/check-duplicates.sh` reports common accidental duplicate/copy artifacts such as `2.java`, `3.tsx`, `copy.*`, `*.orig`, and `*.rej`. The guard only detects and prints matching paths; it does not delete files automatically and does not claim to know the root cause. Review each reported file and remove or rename it intentionally before rerunning validation.
+
+## Secret-safety guard failures
+
+`./scripts/check-secrets.sh` reports high-confidence risky patterns such as AWS access keys, private key headers, and obvious credential assignments. Known fake demo fixtures under `frontend/src/data/demoSamples.ts` and `samples/**` are excluded. If a real secret is reported, rotate it before removing it from the working tree.
+
+## Pre-commit hook installation
+
+Run `./scripts/install-hooks.sh` from the repository root to install local duplicate and secret guardrails in `.git/hooks/pre-commit`. If an unrelated pre-existing hook exists, the installer backs it up before writing the SecureStack AI hook.
+
 ## Backend health check
 
 Open `http://localhost:8080/api/health` while Compose is running.

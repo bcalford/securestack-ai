@@ -28,6 +28,24 @@ docker compose up --build
 
 Open `http://localhost:5173` and run the guided sample review.
 
+## Local validation
+
+Run the full local validation workflow with one command:
+
+```bash
+./scripts/validate-all.sh
+make validate
+```
+
+For a faster loop that skips backend packaging and frontend production build:
+
+```bash
+./scripts/validate-all.sh --quick
+make validate-quick
+```
+
+The validation workflow includes duplicate/copy-file guardrails, conservative secret-safety checks, backend tests, frontend lint/tests/build, and Docker Compose configuration checks. The duplicate-file guard detects common accidental duplicate names such as `2.java`, `3.tsx`, `copy.*`, `*.orig`, and `*.rej`; it reports matches without deleting files or claiming to know their root cause. Optional local pre-commit hooks can be installed with `./scripts/install-hooks.sh`.
+
 ## Local development
 
 Backend:
