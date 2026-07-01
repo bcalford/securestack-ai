@@ -3,6 +3,7 @@ package com.securestack.controller;
 import com.securestack.dto.Dto.*;
 import com.securestack.report.ReportService;
 import com.securestack.service.ScanService;
+import com.securestack.sarif.SarifService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,8 +18,9 @@ public class ApiController {
     private static final Logger log = LoggerFactory.getLogger(ApiController.class);
     private final ScanService scans;
     private final ReportService reports;
+    private final SarifService sarif;
 
-    ApiController(ScanService scans, ReportService reports) { this.scans = scans; this.reports = reports; }
+    ApiController(ScanService scans, ReportService reports, SarifService sarif) { this.scans = scans; this.reports = reports; this.sarif = sarif; }
 
     @GetMapping("/health")
     Map<String, String> health() { return Map.of("status", "ok", "service", "securestack-ai", "version", "1.0.0"); }
@@ -38,6 +40,7 @@ public class ApiController {
     @PatchMapping("/scans/{sid}/findings/{fid}") @ResponseStatus(HttpStatus.NO_CONTENT) void update(@PathVariable UUID sid, @PathVariable UUID fid, @RequestBody UpdateFindingStatusRequest r) { scans.update(sid, fid, r.status()); }
     @DeleteMapping("/scans/{sid}") @ResponseStatus(HttpStatus.NO_CONTENT) void delete(@PathVariable UUID sid) { scans.delete(sid); }
     @GetMapping("/scans/{id}/report") ResponseEntity<byte[]> report(@PathVariable UUID id) { return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=securestack-report.pdf").contentType(MediaType.APPLICATION_PDF).body(reports.pdf(id)); }
+    @GetMapping("/scans/{id}/sarif") Map<String, Object> sarif(@PathVariable UUID id) { return sarif.export(id); }
 
     @ExceptionHandler(NoSuchElementException.class)
     ResponseEntity<ErrorResponse> notFound(Exception e) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("NOT_FOUND", "Requested scan or finding was not found.", List.of())); }
