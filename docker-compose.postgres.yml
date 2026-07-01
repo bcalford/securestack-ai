@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: securestack
+      POSTGRES_USER: securestack
+      POSTGRES_PASSWORD: securestack
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - securestack-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U securestack -d securestack"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/securestack
+      SPRING_DATASOURCE_USERNAME: securestack
+      SPRING_DATASOURCE_PASSWORD: securestack
+      AI_PROVIDER: mock
+      STORE_RAW_FILES: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  securestack-postgres-data:

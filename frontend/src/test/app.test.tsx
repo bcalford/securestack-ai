@@ -55,6 +55,13 @@ const scan: Scan = {
   ],
 };
 
+const bedrockScan: Scan = {
+  ...scan,
+  aiProvider: 'bedrock',
+  executiveSummary: '### Defensive Security Review Summary\n\n**Scan Name:** Portfolio security review\n\n- Prioritize secret rotation',
+  remediationSummary: '**Remediation:**\n\n1. Rotate credentials',
+};
+
 function renderPath(path = '/') {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -71,7 +78,10 @@ function renderPath(path = '/') {
 
 function mockScanResponse(body: Scan = scan) {
   vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-    new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }),
   );
 }
 
@@ -159,6 +169,7 @@ describe('results page', () => {
 
     const findingCard = screen.getByLabelText('Update status for Hardcoded credential').closest('article');
     expect(findingCard).not.toBeNull();
+
     const finding = within(findingCard as HTMLElement);
     expect(finding.getByText('Evidence')).toBeInTheDocument();
     expect(finding.getByText('password=********')).toBeInTheDocument();
@@ -168,6 +179,85 @@ describe('results page', () => {
     expect(finding.getByText('const password = process.env.DB_PASSWORD;')).toBeInTheDocument();
     expect(finding.getByLabelText('Update status for Hardcoded credential')).toHaveValue('OPEN');
     expect(finding.getByText('Rule ID: SEC-002')).toBeInTheDocument();
+  });
+
+  test('report actions show PDF and SARIF exports', async () => {
+    mockScanResponse();
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findByText('Export PDF report')).toHaveAttribute('href', '/api/scans/scan-1/report');
+    expect(screen.getByRole('button', { name: 'Download SARIF' })).toBeInTheDocument();
+  });
+
+  test('SARIF export downloads from the expected endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(scan), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ version: '2.1.0' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:sarif');
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download SARIF' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans/scan-1/sarif'));
+    expect(createObjectUrl).toHaveBeenCalled();
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:sarif');
+  });
+
+  test('SARIF export failure shows a controlled error', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(scan), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'backend detail' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download SARIF' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to download SARIF export. Please try again.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
+
+  test('results page shows bedrock provider', async () => {
+    mockScanResponse(bedrockScan);
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findAllByText('Summary provider: bedrock')).toHaveLength(2);
+  });
+
+  test('markdown summary renders clean text without raw markers/html', async () => {
+    const unsafeScan: Scan = {
+      ...bedrockScan,
+      executiveSummary: '### Safe Heading\n\n<script>alert(1)</script>\n\n- Safe item',
+    };
+
+    mockScanResponse(unsafeScan);
+    const { container } = renderPath('/scans/scan-1');
+
+    expect(await screen.findByRole('heading', { name: 'Safe Heading' })).toBeInTheDocument();
+    expect(container.querySelector('script')).toBeNull();
+    expect(container.querySelector('.markdown-summary')?.textContent).not.toContain('###');
   });
 
   test('empty filtered state renders when no findings match', async () => {
@@ -186,6 +276,7 @@ describe('results page', () => {
         ? new Response(null, { status: 204 })
         : new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } })
     ));
+
     renderPath('/scans/scan-1');
 
     await screen.findAllByText('Hardcoded credential');
@@ -199,8 +290,12 @@ describe('results page', () => {
 
   test('error state remains controlled', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ message: 'stack trace' }), { status: 500, headers: { 'Content-Type': 'application/json' } }),
+      new Response(JSON.stringify({ message: 'stack trace' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }),
     );
+
     renderPath('/scans/missing');
 
     expect(await screen.findByText(/Unable to load this review/)).toBeInTheDocument();

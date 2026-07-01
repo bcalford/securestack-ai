@@ -1,6 +1,6 @@
 # SecureStack AI
 
-SecureStack AI is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and PDF report export.
+SecureStack AI is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and PDF/SARIF report export.
 
 ## Features
 
@@ -9,14 +9,14 @@ SecureStack AI is a local-first defensive security review application for analyz
 - Risk scoring, severity/category breakdowns, and prioritized findings.
 - Finding details with evidence, remediation guidance, secure examples, status updates, and rule IDs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
-- PDF report export for completed reviews.
+- PDF report export and SARIF 2.1.0 JSON export for completed reviews.
 
 ## Tech stack
 
 - **Frontend:** React, TypeScript, Vite, React Router, TanStack Query, Vitest, Testing Library.
-- **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, H2/PostgreSQL-ready persistence, Maven.
+- **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, default H2 persistence, optional local PostgreSQL profile, Maven.
 - **Security analysis:** Rule classes for deterministic defensive findings plus risk scoring and provider-abstracted AI summaries.
-- **Reporting:** Server-generated PDF export.
+- **Reporting:** Server-generated PDF export and backend SARIF 2.1.0 export.
 - **Local runtime:** Docker Compose.
 - **Optional cloud AI:** Amazon Bedrock when manually configured.
 
@@ -55,7 +55,7 @@ Click **Run sample security review** on the landing page or open:
 /scans/new?sample=full-portfolio-demo
 ```
 
-The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, and export the PDF report.
+The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, and export PDF or SARIF from the results page.
 
 ## Screenshots
 
@@ -99,7 +99,7 @@ Keep `BEDROCK_SEND_RAW_CONTENT=false` for private code and sample reviews. Do no
 
 ## Architecture
 
-The frontend submits pasted or uploaded files to the backend scan API. The backend validates untrusted inputs, rejects unsafe paths and unsupported/binary/oversized files, expands ZIP files safely, runs rule-based analysis, stores scan and finding metadata locally, generates a mock or Bedrock summary, and serves results plus PDF exports.
+The frontend submits pasted or uploaded files to the backend scan API. The backend validates untrusted inputs, rejects unsafe paths and unsupported/binary/oversized files, expands ZIP files safely, runs rule-based analysis, stores scan and finding metadata locally, generates a mock or Bedrock summary, and serves results plus PDF and SARIF exports.
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.md), and [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md).
 
@@ -119,7 +119,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - No public deployment or hosted demo.
 - No GitHub repository scanning.
 - No OpenAI provider.
-- No Semgrep integration or SARIF import/export.
+- No Semgrep integration or SARIF import/code-scanning integration; SARIF support is export-only.
 - No multi-user production storage.
 - No production AWS deployment automation.
 
@@ -129,6 +129,8 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`SECURITY_MODEL.md`](SECURITY_MODEL.md)
 - [`ROADMAP.md`](ROADMAP.md)
 - [`docs/local-validation.md`](docs/local-validation.md)
+- [`docs/sarif-export.md`](docs/sarif-export.md)
+- [`docs/postgres-profile.md`](docs/postgres-profile.md)
 - [`docs/demo-script.md`](docs/demo-script.md)
 - [`docs/technical-review-guide.md`](docs/technical-review-guide.md)
 - [`docs/sample-findings.md`](docs/sample-findings.md)

@@ -43,3 +43,21 @@ export async function deleteScan(scanId: string) {
 }
 
 export const reportUrl = (id: string) => `${API}/scans/${id}/report`;
+export const sarifUrl = (id: string) => `${API}/scans/${id}/sarif`;
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadSarif(scanId: string) {
+  const response = await fetch(sarifUrl(scanId));
+  if (!response.ok) throw new Error(await parseError(response));
+  triggerDownload(await response.blob(), `securestack-scan-${scanId}.sarif.json`);
+}

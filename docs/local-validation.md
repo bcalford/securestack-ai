@@ -30,13 +30,54 @@ docker compose up --build
 
 Open `http://localhost:5173` and confirm the app loads.
 
+
+## SARIF export validation
+
+After creating a scan, verify the backend endpoint and frontend download path:
+
+```bash
+curl -f http://localhost:8080/api/scans/{scanId}/sarif
+```
+
+In the frontend results page, select **Download SARIF** and confirm a `securestack-scan-{scanId}.sarif.json` file is downloaded.
+
+## Optional PostgreSQL Docker validation
+
+The default Docker command remains H2-backed:
+
+```bash
+docker compose up --build
+```
+
+Validate the optional local PostgreSQL override without making PostgreSQL the default runtime:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml config
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+```
+
+Open `http://localhost:5173`, create a sample review, confirm it appears in scan history, then restart without removing volumes:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml down
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+```
+
+Confirm the scan history entry remains. To reset local PostgreSQL data, run:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml down -v
+```
+
+The PostgreSQL credentials in the override are development-only local defaults and are not production hardening.
+
 ## Mock-mode smoke test
 
 1. Start the app with Docker Compose or local dev servers.
 2. Open `http://localhost:5173/scans/new?sample=full-portfolio-demo`.
 3. Run the review.
 4. Confirm the summary provider is `mock`.
-5. Review the risk score, prioritized findings, finding details, scan history, and PDF export.
+5. Review the risk score, prioritized findings, finding details, scan history, PDF export, and SARIF download.
 
 ## Optional Bedrock smoke test
 

@@ -8,7 +8,7 @@ Use this guide to review the application behavior and code structure quickly.
 2. Click **Run sample security review**.
 3. Run the review.
 4. Inspect **Fix these first** and expand a finding.
-5. Export a PDF report.
+5. Export a PDF report and download SARIF JSON.
 
 ## Code map
 
@@ -19,10 +19,12 @@ Use this guide to review the application behavior and code structure quickly.
 - Static rules: `backend/src/main/java/com/securestack/analysis/rules/`.
 - AI provider and Bedrock: `backend/src/main/java/com/securestack/analysis/ai/`.
 - PDF reports: `backend/src/main/java/com/securestack/report/ReportService.java`.
+- SARIF export: `backend/src/main/java/com/securestack/sarif/SarifService.java` and `docs/sarif-export.md`.
+- Optional PostgreSQL profile: `docker-compose.postgres.yml`, `backend/src/main/resources/application-postgres.yml`, and `docs/postgres-profile.md`.
 - AWS blueprint: `docs/aws-architecture-blueprint.md`.
 - Security model: `SECURITY_MODEL.md`.
 - Tests: `frontend/src/test/app.test.tsx` and `backend/src/test/java/com/securestack/`.
 
 ## Limitations
 
-The app has a local/demo unauthenticated API. It does not include GitHub scanning, OpenAI, Semgrep/SARIF ingestion, public deployment, or multi-user production storage.
+The app has a local/demo unauthenticated API. It does not include GitHub scanning, OpenAI, Semgrep integration, SARIF ingestion/import, public deployment, or multi-user production storage. SARIF support is export-only.
