@@ -31,6 +31,16 @@ docker compose up --build
 Open `http://localhost:5173` and confirm the app loads.
 
 
+## SARIF export validation
+
+After creating a scan, verify the backend endpoint and frontend download path:
+
+```bash
+curl -f http://localhost:8080/api/scans/{scanId}/sarif
+```
+
+In the frontend results page, select **Download SARIF** and confirm a `securestack-scan-{scanId}.sarif.json` file is downloaded.
+
 ## Optional PostgreSQL Docker validation
 
 The default Docker command remains H2-backed:
@@ -67,7 +77,7 @@ The PostgreSQL credentials in the override are development-only local defaults a
 2. Open `http://localhost:5173/scans/new?sample=full-portfolio-demo`.
 3. Run the review.
 4. Confirm the summary provider is `mock`.
-5. Review the risk score, prioritized findings, finding details, scan history, and PDF export.
+5. Review the risk score, prioritized findings, finding details, scan history, PDF export, and SARIF download.
 
 ## Optional Bedrock smoke test
 

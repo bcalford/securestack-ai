@@ -45,3 +45,12 @@ The results dashboard renders Bedrock executive and remediation summaries with `
 ## Bedrock fallback summary
 
 If `AI_PROVIDER=bedrock` is selected but Bedrock cannot be invoked, static findings should still be available and the summary should fall back to a controlled message. Check AWS credentials, `AWS_REGION`, `BEDROCK_MODEL_ID`, model access, IAM permissions such as `bedrock:InvokeModel`, and timeout settings. Common causes include `AccessDeniedException`, using a model in the wrong region, a model ID typo, missing model access, missing local credentials, or a network timeout.
+
+
+## SARIF download issues
+
+Create or open a valid scan before downloading SARIF. The endpoint is `GET /api/scans/{scanId}/sarif`; a missing scan ID returns the same not-found behavior as other scan lookups. SARIF support is export-only and does not upload to GitHub code scanning automatically.
+
+## Optional PostgreSQL mode issues
+
+Use `docker compose -f docker-compose.yml -f docker-compose.postgres.yml config` to validate the override. If scan history does not persist after restart, confirm you used `down` without `-v`; `down -v` removes the named PostgreSQL volume by design. The bundled `securestack` database credentials are local development defaults only.

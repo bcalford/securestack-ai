@@ -14,7 +14,7 @@ SecureStack AI is a local-first defensive security review application for analyz
 ## Tech stack
 
 - **Frontend:** React, TypeScript, Vite, React Router, TanStack Query, Vitest, Testing Library.
-- **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, H2/PostgreSQL-ready persistence, Maven.
+- **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, default H2 persistence, optional local PostgreSQL profile, Maven.
 - **Security analysis:** Rule classes for deterministic defensive findings plus risk scoring and provider-abstracted AI summaries.
 - **Reporting:** Server-generated PDF export and backend SARIF 2.1.0 export.
 - **Local runtime:** Docker Compose.
@@ -55,7 +55,7 @@ Click **Run sample security review** on the landing page or open:
 /scans/new?sample=full-portfolio-demo
 ```
 
-The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, and export the PDF report, or request SARIF JSON from `GET /api/scans/{id}/sarif`.
+The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, and export PDF or SARIF from the results page.
 
 ## Screenshots
 
@@ -129,6 +129,8 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`SECURITY_MODEL.md`](SECURITY_MODEL.md)
 - [`ROADMAP.md`](ROADMAP.md)
 - [`docs/local-validation.md`](docs/local-validation.md)
+- [`docs/sarif-export.md`](docs/sarif-export.md)
+- [`docs/postgres-profile.md`](docs/postgres-profile.md)
 - [`docs/demo-script.md`](docs/demo-script.md)
 - [`docs/technical-review-guide.md`](docs/technical-review-guide.md)
 - [`docs/sample-findings.md`](docs/sample-findings.md)
