@@ -327,3 +327,69 @@ describe('results page', () => {
 test('results top findings sorts correctly', () => {
   expect(topPriorityFindings(scan.findings as Finding[])[0].title).toBe('Hardcoded credential');
 });
+describe('rule catalog page', () => {
+  const rules = [
+    {
+      id: 'API-001',
+      title: 'Wildcard CORS policy',
+      category: 'API_SECURITY',
+      severity: 'MEDIUM',
+      description: 'Detects wildcard CORS origins.',
+      recommendation: 'Restrict CORS to trusted origins.',
+      reviewDepthBehavior: 'Runs in STANDARD and FULL review depths unless filtered by focus area.',
+    },
+    {
+      id: 'SEC-001',
+      title: 'Secret detection',
+      category: 'SECRETS',
+      severity: 'HIGH',
+      description: 'Detects committed credentials.',
+      recommendation: 'Rotate exposed credentials and use a managed secret store.',
+      reviewDepthBehavior: 'Runs in QUICK, STANDARD, and FULL review depths unless filtered by focus area.',
+    },
+  ];
+
+  test('/rules renders rule catalog with mocked API rules', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    expect(screen.getByRole('heading', { name: 'Rule Catalog' })).toBeInTheDocument();
+    expect(await screen.findByText('Secret detection')).toBeInTheDocument();
+    expect(screen.getByText('API-001')).toBeInTheDocument();
+  });
+
+  test('/rules search filters rendered rules', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    fireEvent.change(screen.getByLabelText('Search rules'), { target: { value: 'cors' } });
+
+    expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
+    expect(screen.queryByText('Secret detection')).not.toBeInTheDocument();
+  });
+
+  test('/rules shows controlled empty and error states', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+    expect(await screen.findByText('No rules are currently published in the catalog.')).toBeInTheDocument();
+
+    vi.restoreAllMocks();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ message: 'backend detail' }), { status: 500, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load rule catalog.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
+});

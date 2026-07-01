@@ -1,4 +1,4 @@
-import type { Scan, ScanListItem } from '../types';
+import type { RuleCatalogItem, Scan, ScanListItem } from '../types';
 
 const API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -26,6 +26,12 @@ export async function listScans() {
   const response = await fetch(`${API}/scans`);
   if (!response.ok) throw new Error(await parseError(response));
   return response.json() as Promise<ScanListItem[]>;
+}
+
+export async function listRules() {
+  const response = await fetch(`${API}/rules`);
+  if (!response.ok) throw new Error(await parseError(response));
+  return response.json() as Promise<RuleCatalogItem[]>;
 }
 
 export async function updateFindingStatus(scanId: string, findingId: string, status: string) {

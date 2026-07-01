@@ -7,8 +7,9 @@ Use this guide to review the application behavior and code structure quickly.
 1. Run the app locally.
 2. Click **Run sample security review**.
 3. Run the review.
-4. Inspect **Fix these first** and expand a finding.
-5. Export a PDF report and download SARIF JSON.
+4. Open **Rules** to review the static rule catalog.
+5. Inspect **Fix these first** and expand a finding.
+6. Export a PDF report and download SARIF JSON.
 
 ## Code map
 
@@ -16,6 +17,7 @@ Use this guide to review the application behavior and code structure quickly.
 - Demo fixtures: `frontend/src/data/demoSamples.ts`.
 - Risk helpers: `frontend/src/utils/risk.ts`.
 - Backend scan service: `backend/src/main/java/com/securestack/service/ScanService.java`.
+- Static rule catalog: `GET /api/rules`, `/rules`, and `docs/rule-catalog.md`.
 - Static rules: `backend/src/main/java/com/securestack/analysis/rules/`.
 - AI provider and Bedrock: `backend/src/main/java/com/securestack/analysis/ai/`.
 - PDF reports: `backend/src/main/java/com/securestack/report/ReportService.java`.

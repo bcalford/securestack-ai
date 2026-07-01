@@ -5,7 +5,7 @@ SecureStack AI is a local-first defensive security review application for analyz
 ## Features
 
 - Guided scan creation from pasted files, uploaded files/ZIP archives, or built-in safe demo samples.
-- Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns.
+- Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns, with a browsable rule catalog.
 - Risk scoring, severity/category breakdowns, and prioritized findings.
 - Finding details with evidence, remediation guidance, secure examples, status updates, and rule IDs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
@@ -114,6 +114,13 @@ mvn spring-boot:run
 ```
 
 Keep `BEDROCK_SEND_RAW_CONTENT=false` for private code and sample reviews. Do not commit credentials or use real secrets in sample files.
+
+## Documentation
+
+- [Rule catalog](docs/rule-catalog.md)
+- [Technical review guide](docs/technical-review-guide.md)
+- [Security model](SECURITY_MODEL.md)
+- [Architecture](ARCHITECTURE.md)
 
 ## Architecture
 

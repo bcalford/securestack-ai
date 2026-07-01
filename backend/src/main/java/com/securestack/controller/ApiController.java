@@ -1,6 +1,7 @@
 package com.securestack.controller;
 
 import com.securestack.dto.Dto.*;
+import com.securestack.analysis.RuleCatalogService;
 import com.securestack.report.ReportService;
 import com.securestack.service.ScanService;
 import com.securestack.sarif.SarifService;
@@ -19,11 +20,15 @@ public class ApiController {
     private final ScanService scans;
     private final ReportService reports;
     private final SarifService sarif;
+    private final RuleCatalogService ruleCatalog;
 
-    ApiController(ScanService scans, ReportService reports, SarifService sarif) { this.scans = scans; this.reports = reports; this.sarif = sarif; }
+    ApiController(ScanService scans, ReportService reports, SarifService sarif, RuleCatalogService ruleCatalog) { this.scans = scans; this.reports = reports; this.sarif = sarif; this.ruleCatalog = ruleCatalog; }
 
     @GetMapping("/health")
     Map<String, String> health() { return Map.of("status", "ok", "service", "securestack-ai", "version", "1.0.0"); }
+
+    @GetMapping("/rules")
+    List<RuleCatalogItem> rules() { return ruleCatalog.list(); }
 
     @PostMapping(value = "/scans", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<CreateScanResponse> create(@RequestParam(required = false) String scanName,
