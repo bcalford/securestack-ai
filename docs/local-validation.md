@@ -30,6 +30,37 @@ docker compose up --build
 
 Open `http://localhost:5173` and confirm the app loads.
 
+
+## Optional PostgreSQL Docker validation
+
+The default Docker command remains H2-backed:
+
+```bash
+docker compose up --build
+```
+
+Validate the optional local PostgreSQL override without making PostgreSQL the default runtime:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml config
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+```
+
+Open `http://localhost:5173`, create a sample review, confirm it appears in scan history, then restart without removing volumes:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml down
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml up --build
+```
+
+Confirm the scan history entry remains. To reset local PostgreSQL data, run:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.postgres.yml down -v
+```
+
+The PostgreSQL credentials in the override are development-only local defaults and are not production hardening.
+
 ## Mock-mode smoke test
 
 1. Start the app with Docker Compose or local dev servers.
