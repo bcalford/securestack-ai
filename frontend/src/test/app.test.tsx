@@ -143,6 +143,124 @@ describe('scan form', () => {
     expect(within(selector).getByRole('option', { name: 'Insecure Terraform' })).toBeInTheDocument();
   });
 
+
+
+  test('GitHub URL mode renders local-only public repository guidance', () => {
+    renderPath('/scans/new');
+
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+
+    expect(screen.getByLabelText('Public GitHub repository URL')).toBeInTheDocument();
+    expect(screen.getByText(/Public GitHub repositories only/i)).toBeInTheDocument();
+    expect(screen.getByText(/Analysis runs locally after import/i)).toBeInTheDocument();
+    expect(screen.getByText(/No token is needed/i)).toBeInTheDocument();
+    expect(screen.getByText(/Uploaded or imported code is not executed/i)).toBeInTheDocument();
+  });
+
+  test('entering a GitHub URL submits the expected repositoryUrl field', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-github' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+    fireEvent.change(screen.getByLabelText('Public GitHub repository URL'), {
+      target: { value: 'https://github.com/securestack/demo' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      '/api/scans/github',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: expect.any(String),
+      }),
+    ));
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(String(init?.body))).toEqual(expect.objectContaining({
+      repositoryUrl: 'https://github.com/securestack/demo',
+      reviewDepth: 'STANDARD',
+      generatePdf: false,
+    }));
+  });
+
+  test('paste mode still submits valid pasted files', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-paste' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.change(screen.getByLabelText('Paste text'), { target: { value: 'const ok = true;' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));
+    const [, init] = fetchMock.mock.calls[0];
+    const form = init?.body as FormData;
+    expect(form.get('pastedFiles')).toContain('const ok = true;');
+  });
+
+  test('upload mode still submits selected files', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-upload' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'Upload files' }));
+    fireEvent.change(screen.getByLabelText('Upload files or ZIP'), {
+      target: { files: [new File(['FROM node:20'], 'Dockerfile', { type: 'text/plain' })] },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));
+  });
+
+  test('sample mode still submits preloaded sample files', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ scanId: 'scan-sample' }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'Use sample' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));
+    const [, init] = fetchMock.mock.calls[0];
+    const form = init?.body as FormData;
+    expect(String(form.get('pastedFiles'))).toContain('server.js');
+  });
+
+  test('invalid empty submit remains controlled', () => {
+    renderPath('/scans/new');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Add at least one valid pasted, uploaded, sample, or GitHub URL input/i);
+  });
+
+  test('invalid GitHub URL submit remains controlled without backend details', async () => {
+    renderPath('/scans/new');
+
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+    fireEvent.change(screen.getByLabelText('Public GitHub repository URL'), { target: { value: 'http://example.com/repo' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Enter a valid public GitHub repository URL/i);
+  });
+
+  test('no private repository or OAuth support claims appear', () => {
+    renderPath('/scans/new');
+    fireEvent.click(screen.getByRole('button', { name: 'GitHub URL' }));
+
+    expect(screen.queryByText(/OAuth/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/private repo support/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/private repository support/i)).not.toBeInTheDocument();
+  });
+
   test('sample URL param opens sample mode and preloads the full portfolio sample', () => {
     renderPath('/scans/new?sample=full-portfolio-demo');
 

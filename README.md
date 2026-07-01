@@ -4,7 +4,7 @@ SecureStack AI is a local-first defensive security review application for analyz
 
 ## Features
 
-- Guided scan creation from pasted files, uploaded files/ZIP archives, or built-in safe demo samples.
+- Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis.
 - Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns, with a browsable rule catalog.
 - Risk scoring, severity/category breakdowns, and prioritized findings.
 - Finding details with evidence, remediation guidance, secure examples, status updates, and rule IDs.
@@ -142,7 +142,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 
 - No authentication or authorization.
 - No public deployment or hosted demo.
-- No GitHub repository scanning.
+- Public GitHub URL import is limited to unauthenticated public repositories; there is no private repo support, OAuth flow, token handling, GitHub App, or GitHub code scanning integration.
 - No OpenAI provider.
 - No Semgrep integration or SARIF import/code-scanning integration; SARIF support is export-only.
 - No multi-user production storage.
@@ -154,6 +154,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`SECURITY_MODEL.md`](SECURITY_MODEL.md)
 - [`ROADMAP.md`](ROADMAP.md)
 - [`docs/local-validation.md`](docs/local-validation.md)
+- [`docs/github-url-import.md`](docs/github-url-import.md)
 - [`docs/sarif-export.md`](docs/sarif-export.md)
 - [`docs/postgres-profile.md`](docs/postgres-profile.md)
 - [`docs/demo-script.md`](docs/demo-script.md)

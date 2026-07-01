@@ -118,7 +118,8 @@ The PostgreSQL credentials in the override are development-only local defaults a
 2. Open `http://localhost:5173/scans/new?sample=full-portfolio-demo`.
 3. Run the review.
 4. Confirm the summary provider is `mock`.
-5. Review the risk score, prioritized findings, finding details, scan history, PDF export, and SARIF download.
+5. Optionally open `/scans/new`, choose **GitHub URL**, enter a public repository URL, and confirm the UI explains that import is public-only, local, token-free, and does not execute imported code.
+6. Review the risk score, prioritized findings, finding details, scan history, PDF export, and SARIF download.
 
 ## Optional Bedrock smoke test
 
