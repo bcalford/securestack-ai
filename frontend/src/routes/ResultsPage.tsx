@@ -8,9 +8,10 @@ import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import SeverityChart from '../components/dashboard/SeverityChart';
 import FindingFilters, { type Filters } from '../components/findings/FindingFilters';
 import FindingsTable from '../components/findings/FindingsTable';
+import RemediationStatusSummary from '../components/findings/RemediationStatusSummary';
 import ReportActions from '../components/reports/ReportActions';
 import type { Finding } from '../types';
-import { buildRiskExplanation, topPriorityFindings } from '../utils/risk';
+import { buildRiskExplanation, sortFindingsByPriority, topPriorityFindings } from '../utils/risk';
 
 const markdownElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'strong', 'em', 'ul', 'ol', 'li', 'code', 'pre'];
 
@@ -74,18 +75,27 @@ export default function ResultsPage() {
     queryKey: ['scan', id],
     queryFn: () => getScan(id!),
   });
-  const [filters, setFilters] = useState<Filters>({ search: '', severity: '', category: '', status: '' });
+  const [filters, setFilters] = useState<Filters>({ search: '', severity: '', category: '', status: '', confidence: '', sortBy: 'priority' });
 
   if (isLoading) return <LoadingState />;
   if (error || !data) return <ErrorState />;
 
+  const severityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4 };
   const rows = data.findings
     .filter(finding => (
       finding.title + finding.fileName + finding.category + finding.description
     ).toLowerCase().includes(filters.search.toLowerCase()))
     .filter(finding => !filters.severity || finding.severity === filters.severity)
     .filter(finding => !filters.category || finding.category === filters.category)
-    .filter(finding => !filters.status || finding.status === filters.status);
+    .filter(finding => !filters.status || finding.status === filters.status)
+    .filter(finding => !filters.confidence || finding.confidence === filters.confidence)
+    .sort((a, b) => {
+      if (filters.sortBy === 'priority') return sortFindingsByPriority([a, b])[0] === a ? -1 : 1;
+      if (filters.sortBy === 'severity') return severityRank[a.severity] - severityRank[b.severity];
+      if (filters.sortBy === 'file') return `${a.fileName}:${a.lineNumber ?? 0}`.localeCompare(`${b.fileName}:${b.lineNumber ?? 0}`);
+      if (filters.sortBy === 'status') return a.status.localeCompare(b.status);
+      return 0;
+    });
 
   return (
     <main className="container">
@@ -114,6 +124,7 @@ export default function ResultsPage() {
       </div>
 
       <FixFirstPanel findings={data.findings} />
+      <RemediationStatusSummary findings={data.findings} />
 
       <section className="card summary-card" aria-labelledby="summary-heading">
         <h2 id="summary-heading">AI summary</h2>

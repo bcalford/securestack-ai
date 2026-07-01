@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
 import type { Finding, Scan } from '../types';
 import { topPriorityFindings } from '../utils/risk';
+import { compareScans } from '../utils/scanComparison';
 
 const scan: Scan = {
   id: 'scan-1',
@@ -291,6 +292,75 @@ describe('about and sample report pages', () => {
   });
 });
 
+
+
+describe('scan comparison', () => {
+  const newerScan: Scan = {
+    ...scan,
+    id: 'scan-2',
+    name: 'Follow-up review',
+    riskScore: 70,
+    findingCount: 2,
+    findings: [
+      { ...scan.findings[0], severity: 'CRITICAL' },
+      {
+        id: 'finding-3',
+        fileName: 'api.js',
+        lineNumber: 8,
+        title: 'Missing rate limiting',
+        description: 'Endpoint has no throttling.',
+        severity: 'LOW',
+        category: 'API_SECURITY',
+        confidence: 'MEDIUM',
+        evidence: 'app.post("/login")',
+        recommendation: 'Add rate limiting.',
+        secureExample: 'rateLimit({ windowMs: 60000 })',
+        status: 'OPEN',
+        ruleId: 'API-004',
+      },
+    ],
+    severityCounts: { CRITICAL: 1, LOW: 1 },
+    categoryCounts: { SECRETS: 1, API_SECURITY: 1 },
+  };
+
+  test('comparison helper identifies new, resolved, unchanged, and changed findings', () => {
+    const comparison = compareScans(scan, newerScan);
+
+    expect(comparison.riskScoreDelta).toBe(-10);
+    expect(comparison.findingCountDelta).toBe(0);
+    expect(comparison.newFindings.map(item => item.right?.title)).toContain('Missing rate limiting');
+    expect(comparison.resolvedFindings.map(item => item.left?.title)).toContain('Wildcard CORS policy');
+    expect(comparison.changedFindings.map(item => item.right?.title)).toContain('Hardcoded credential');
+    expect(comparison.unchangedFindings).toHaveLength(0);
+  });
+
+  test('compare page renders two scan names and risk delta', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(newerScan), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    renderPath('/scans/compare?left=scan-1&right=scan-2');
+
+    expect(await screen.findByText('Demo review')).toBeInTheDocument();
+    expect(screen.getByText('Follow-up review')).toBeInTheDocument();
+    expect(screen.getByText('-10')).toBeInTheDocument();
+  });
+
+  test('scan history allows selecting two scans for comparison', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([scan, newerScan]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    const checks = await screen.findAllByLabelText('Select for comparison');
+    fireEvent.click(checks[0]);
+    fireEvent.click(checks[1]);
+
+    expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('href', '/scans/compare?left=scan-1&right=scan-2');
+  });
+});
+
 describe('results page', () => {
   test('risk, provider, fix-first, markdown summary, findings, and supplied details render', async () => {
     mockScanResponse();
@@ -407,6 +477,33 @@ describe('results page', () => {
     fireEvent.change(screen.getByLabelText('Search findings'), { target: { value: 'no-match' } });
 
     expect(screen.getByText(/No findings match the current filters/)).toBeInTheDocument();
+  });
+
+  test('results page status summary renders', async () => {
+    mockScanResponse({ ...scan, findings: [scan.findings[0], { ...scan.findings[1], status: 'FIXED' }] });
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findByRole('heading', { name: 'Remediation workflow' })).toBeInTheDocument();
+    expect(screen.getByText('Open findings')).toBeInTheDocument();
+    expect(screen.getByText('Fixed findings')).toBeInTheDocument();
+  });
+
+  test('confidence filtering and status sorting work', async () => {
+    mockScanResponse({ ...scan, findings: [scan.findings[0], { ...scan.findings[1], confidence: 'MEDIUM', status: 'FIXED' }] });
+    renderPath('/scans/scan-1');
+
+    await screen.findAllByText('Hardcoded credential');
+    fireEvent.change(screen.getByLabelText('Filter confidence'), { target: { value: 'MEDIUM' } });
+
+    const findingList = screen.getByLabelText('Finding details');
+    expect(within(findingList).queryByText('Hardcoded credential')).not.toBeInTheDocument();
+    expect(within(findingList).getByText('Wildcard CORS policy')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Filter confidence'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Sort findings'), { target: { value: 'status' } });
+
+    const headings = screen.getAllByRole('heading', { level: 3 }).map(heading => heading.textContent);
+    expect(headings).toEqual(expect.arrayContaining(['Hardcoded credential', 'Wildcard CORS policy']));
   });
 
   test('finding status update behavior calls the API without reloading from the network', async () => {

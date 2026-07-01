@@ -6,8 +6,8 @@ SecureStack AI is a local-first defensive security review application for analyz
 
 - Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis.
 - Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns, with a browsable rule catalog.
-- Risk scoring, severity/category breakdowns, and prioritized findings.
-- Finding details with evidence, remediation guidance, secure examples, status updates, and rule IDs.
+- Risk scoring, severity/category breakdowns, prioritized findings, and local comparison between completed scans.
+- Finding details with evidence, remediation guidance, secure examples, status updates, remediation workflow counts, and rule IDs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
 - PDF report export and SARIF 2.1.0 JSON export for completed reviews.
 
@@ -155,6 +155,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`ROADMAP.md`](ROADMAP.md)
 - [`docs/local-validation.md`](docs/local-validation.md)
 - [`docs/github-url-import.md`](docs/github-url-import.md)
+- [`docs/scan-comparison.md`](docs/scan-comparison.md)
 - [`docs/sarif-export.md`](docs/sarif-export.md)
 - [`docs/postgres-profile.md`](docs/postgres-profile.md)
 - [`docs/demo-script.md`](docs/demo-script.md)
