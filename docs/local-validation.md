@@ -20,6 +20,8 @@ Use `./scripts/validate-all.sh --skip-docker` when Docker is unavailable and you
 
 The validation script runs duplicate-file guardrails, secret-safety checks, backend tests, backend packaging unless `--quick` is set, frontend dependency installation if `node_modules` is missing, frontend lint/tests/build unless `--quick` is set, and Docker Compose configuration checks unless `--skip-docker` is set.
 
+GitHub Actions CI mirrors the same local validation categories for pull requests and pushes to `main`: backend test/package, frontend lint/test/build, duplicate-file guardrails, secret-safety checks, default Docker Compose config validation, and PostgreSQL Compose override config validation. Keep local validation passing before opening a pull request so CI remains a confirmation step rather than the first validation run.
+
 ## Guardrail checks
 
 ```bash
