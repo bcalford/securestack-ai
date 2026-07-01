@@ -2,6 +2,7 @@ package com.securestack.controller;
 
 import com.securestack.dto.Dto.*;
 import com.securestack.analysis.RuleCatalogService;
+import com.securestack.github.GitHubRepositoryImportService;
 import com.securestack.report.ReportService;
 import com.securestack.service.ScanService;
 import com.securestack.sarif.SarifService;
@@ -21,8 +22,9 @@ public class ApiController {
     private final ReportService reports;
     private final SarifService sarif;
     private final RuleCatalogService ruleCatalog;
+    private final GitHubRepositoryImportService githubImport;
 
-    ApiController(ScanService scans, ReportService reports, SarifService sarif, RuleCatalogService ruleCatalog) { this.scans = scans; this.reports = reports; this.sarif = sarif; this.ruleCatalog = ruleCatalog; }
+    ApiController(ScanService scans, ReportService reports, SarifService sarif, RuleCatalogService ruleCatalog, GitHubRepositoryImportService githubImport) { this.scans = scans; this.reports = reports; this.sarif = sarif; this.ruleCatalog = ruleCatalog; this.githubImport = githubImport; }
 
     @GetMapping("/health")
     Map<String, String> health() { return Map.of("status", "ok", "service", "securestack-ai", "version", "1.0.0"); }
@@ -38,6 +40,13 @@ public class ApiController {
                                               @RequestPart(required = false) MultipartFile[] files,
                                               @RequestParam(required = false) String pastedFiles) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED).body(scans.create(scanName, reviewDepth, focusAreas, pastedFiles, files, generatePdf));
+    }
+
+
+    @PostMapping(value = "/scans/github", consumes = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<CreateScanResponse> createFromGitHub(@RequestBody GitHubImportRequest request) throws Exception {
+        var files = githubImport.importPublicRepository(request.repositoryUrl());
+        return ResponseEntity.status(HttpStatus.CREATED).body(scans.createFromFiles(request.scanName(), request.reviewDepth(), request.focusAreas(), files));
     }
 
     @GetMapping("/scans/{id}") ScanResultDto get(@PathVariable UUID id) { return scans.get(id); }

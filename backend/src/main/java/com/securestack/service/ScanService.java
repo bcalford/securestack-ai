@@ -44,10 +44,14 @@ public class ScanService {
 
     @Transactional
     public CreateScanResponse create(String name, String depth, String focusAreas, String pastedJson, MultipartFile[] uploads, boolean pdf) throws Exception {
+        return createFromFiles(name, depth, focusAreas, normalizeFiles(pastedJson, uploads));
+    }
+
+    @Transactional
+    public CreateScanResponse createFromFiles(String name, String depth, String focusAreas, List<ScanFileInput> files) {
         ReviewDepth reviewDepth = parseDepth(depth);
         Set<Category> focusCategories = focusCategories(focusAreas);
-        List<ScanFileInput> files = normalizeFiles(pastedJson, uploads);
-        if (files.isEmpty()) throw new IllegalArgumentException("At least one pasted or uploaded file is required.");
+        if (files == null || files.isEmpty()) throw new IllegalArgumentException("At least one pasted, uploaded, or imported file is required.");
         if (files.size() > properties.getMaxScanFiles()) throw new IllegalArgumentException("Too many files; maximum is " + properties.getMaxScanFiles() + ".");
         for (ScanFileInput file : files) validate(file);
 
