@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { downloadSarif, reportUrl } from '../../api/client';
+import { downloadJsonReport, downloadSarif, reportUrl } from '../../api/client';
 
 export default function ReportActions({ scanId }: { scanId: string }) {
-  const [sarifError, setSarifError] = useState('');
+  const [exportError, setExportError] = useState('');
   const [isDownloadingSarif, setIsDownloadingSarif] = useState(false);
+  const [isDownloadingJson, setIsDownloadingJson] = useState(false);
 
   async function handleSarifDownload() {
-    setSarifError('');
+    setExportError('');
     setIsDownloadingSarif(true);
     try {
       await downloadSarif(scanId);
     } catch {
-      setSarifError('Unable to download SARIF export. Please try again.');
+      setExportError('Unable to download SARIF export. Please try again.');
     } finally {
       setIsDownloadingSarif(false);
+    }
+  }
+
+
+  async function handleJsonDownload() {
+    setExportError('');
+    setIsDownloadingJson(true);
+    try {
+      await downloadJsonReport(scanId);
+    } catch {
+      setExportError('Unable to download JSON export. Please try again.');
+    } finally {
+      setIsDownloadingJson(false);
     }
   }
 
@@ -26,8 +40,11 @@ export default function ReportActions({ scanId }: { scanId: string }) {
       <button className="btn secondary" type="button" onClick={handleSarifDownload} disabled={isDownloadingSarif}>
         {isDownloadingSarif ? 'Preparing SARIF...' : 'Download SARIF'}
       </button>{' '}
+      <button className="btn secondary" type="button" onClick={handleJsonDownload} disabled={isDownloadingJson}>
+        {isDownloadingJson ? 'Preparing JSON...' : 'Download JSON'}
+      </button>{' '}
       <Link className="btn secondary" to="/scans/new">Start another review</Link>
-      {sarifError && <p className="error" role="alert">{sarifError}</p>}
+      {exportError && <p className="error" role="alert">{exportError}</p>}
     </section>
   );
 }

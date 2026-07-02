@@ -19,12 +19,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.MvcResult;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -32,6 +35,83 @@ class SarifExportIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ScanRepository scans;
     @Autowired FindingRepository findings;
+
+
+    @Test
+    void sarifIncludesRequiredMetadataAndFingerprints() throws Exception {
+        Scan scan = saveScan("SARIF metadata");
+        saveFinding(scan.id, "SEC-001", Severity.HIGH, "src/App.java", 10, "Token exposed");
+
+        mvc.perform(get("/api/scans/{scanId}/sarif", scan.id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value("2.1.0"))
+                .andExpect(jsonPath("$['$schema']").value("https://json.schemastore.org/sarif-2.1.0.json"))
+                .andExpect(jsonPath("$.runs[0].tool.driver.name").value("SecureStack AI"))
+                .andExpect(jsonPath("$.runs[0].tool.driver.informationUri").value("https://github.com/bcalford/securestack-ai"))
+                .andExpect(jsonPath("$.runs[0].tool.driver.semanticVersion").value("0.4-alpha"))
+                .andExpect(jsonPath("$.runs[0].tool.driver.rules[0].properties.category").value("INPUT_VALIDATION"))
+                .andExpect(jsonPath("$.runs[0].tool.driver.rules[0].properties.security-severity").value("8.0"))
+                .andExpect(jsonPath("$.runs[0].results[0].partialFingerprints['securestackFingerprint/v1']", matchesPattern("[a-f0-9]{64}")))
+                .andExpect(jsonPath("$.runs[0].results[0].properties.status").value("OPEN"));
+    }
+
+    @Test
+    void sarifRuleAndResultOrderingIsDeterministic() throws Exception {
+        Scan scan = saveScan("SARIF deterministic");
+        saveFinding(scan.id, "Z-RULE", Severity.LOW, "b.java", 2, "B finding");
+        saveFinding(scan.id, "A-RULE", Severity.HIGH, "a.java", 1, "A finding");
+
+        MvcResult first = mvc.perform(get("/api/scans/{scanId}/sarif", scan.id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.runs[0].tool.driver.rules[*].id", contains("A-RULE", "Z-RULE")))
+                .andExpect(jsonPath("$.runs[0].results[*].ruleId", contains("A-RULE", "Z-RULE")))
+                .andReturn();
+        MvcResult second = mvc.perform(get("/api/scans/{scanId}/sarif", scan.id))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(second.getResponse().getContentAsString()).isEqualTo(first.getResponse().getContentAsString());
+    }
+
+    @Test
+    void jsonExportEndpointReturnsScanReportWithoutRawContent() throws Exception {
+        Scan scan = saveScan("JSON mapping");
+        scan.aiProvider = "mock";
+        scan.executiveSummary = "Executive token = abc123";
+        scan.remediationSummary = "Rotate token = abc123";
+        scan.files = List.of("src/Secret.java");
+        scans.save(scan);
+        saveFinding(scan.id, "SEC-002", Severity.HIGH, "src/Secret.java", 4, "Hardcoded password = supersecret");
+
+        mvc.perform(get("/api/scans/{scanId}/export/json", scan.id))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.format").value("SecureStack JSON Report"))
+                .andExpect(jsonPath("$.exportVersion").value("0.4-alpha"))
+                .andExpect(jsonPath("$.scanId").value(scan.id.toString()))
+                .andExpect(jsonPath("$.scanName").value("JSON mapping"))
+                .andExpect(jsonPath("$.createdAt").exists())
+                .andExpect(jsonPath("$.riskScore").value(70))
+                .andExpect(jsonPath("$.riskLevel").value("MODERATE"))
+                .andExpect(jsonPath("$.aiProvider").value("mock"))
+                .andExpect(jsonPath("$.executiveSummary").value("Executive token = <redacted>"))
+                .andExpect(jsonPath("$.remediationSummary").value("Rotate token = <redacted>"))
+                .andExpect(jsonPath("$.filesReviewed", contains("src/Secret.java")))
+                .andExpect(jsonPath("$.findings", hasSize(1)))
+                .andExpect(jsonPath("$.findings[0].ruleId").value("SEC-002"))
+                .andExpect(jsonPath("$.findings[0].status").value("OPEN"))
+                .andExpect(jsonPath("$.findings[0].controlMappings").isArray())
+                .andExpect(jsonPath("$.limitations").exists())
+                .andExpect(content().string(not(containsString("RAW_UPLOADED_SECRET_DO_NOT_EXPORT"))))
+                .andExpect(content().string(not(containsString("supersecret"))));
+    }
+
+    @Test
+    void missingJsonExportScanReturnsNotFound() throws Exception {
+        mvc.perform(get("/api/scans/{scanId}/export/json", UUID.randomUUID()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
 
     @Test
     void sarifEndpointExportsCompletedScanFindings() throws Exception {
