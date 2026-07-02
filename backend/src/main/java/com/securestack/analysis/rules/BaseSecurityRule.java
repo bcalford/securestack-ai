@@ -1,6 +1,7 @@
 package com.securestack.analysis.rules;
 
 import com.securestack.analysis.SecurityRule;
+import com.securestack.analysis.SecurityRule.ControlMapping;
 import com.securestack.dto.Dto.ScanFileInput;
 import com.securestack.model.Entities.Finding;
 import com.securestack.model.Enums.*;
@@ -22,7 +23,7 @@ public abstract class BaseSecurityRule implements SecurityRule {
         finding.confidence = confidence;
         finding.evidence = Sanitizer.mask(evidence);
         finding.recommendation = recommendation;
-        finding.secureExample = "Use environment variables, allowlists, parameterized APIs, and least-privilege configuration.";
+        finding.secureExample = secureExample();
         finding.ruleId = id();
         return finding;
     }
@@ -31,13 +32,26 @@ public abstract class BaseSecurityRule implements SecurityRule {
         List<Finding> results = new ArrayList<>();
         Matcher matcher = pattern.matcher(file.content() == null ? "" : file.content());
         while (matcher.find()) {
-            results.add(finding(file, title, severity, category, Confidence.HIGH, matcher.group(), recommendation));
+            results.add(finding(file, title, severity, category, confidence(), matcher.group(), recommendation));
         }
         return results;
     }
 
     protected boolean fileNameMatches(ScanFileInput file, String name) {
         return file.fileName() != null && file.fileName().equalsIgnoreCase(name);
+    }
+
+    protected boolean fileNameEndsWith(ScanFileInput file, String suffix) {
+        return file.fileName() != null && file.fileName().toLowerCase().endsWith(suffix.toLowerCase());
+    }
+
+    protected List<ControlMapping> mappings(String owasp, String cwe, String ssdf, String asvs) {
+        return List.of(
+            new ControlMapping("OWASP Top 10", owasp),
+            new ControlMapping("CWE", cwe),
+            new ControlMapping("NIST SSDF-lite", ssdf),
+            new ControlMapping("ASVS-lite", asvs)
+        );
     }
 
     private int lineNumber(String content, String evidence) {

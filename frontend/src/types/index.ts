@@ -4,4 +4,5 @@ export type Scan={id:string;name:string;createdAt:string;status:string;riskScore
 export type ScanListItem={id:string;name:string;createdAt:string;riskScore:number;riskLevel:string;findingCount:number};
 export type PastedFile={fileName:string;fileType:string;content:string};
 
-export type RuleCatalogItem={id:string;title:string;category:string;severity:Severity;description:string;recommendation:string;reviewDepthBehavior?:string};
+export type ControlMapping={framework:string;value:string};
+export type RuleCatalogItem={id:string;title:string;category:string;severity:Severity;confidence?:string;description:string;recommendation:string;secureExample?:string;falsePositiveNote?:string;reviewDepthBehavior?:string;controlMappings?:ControlMapping[]};

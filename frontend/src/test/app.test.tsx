@@ -551,7 +551,13 @@ describe('rule catalog page', () => {
       severity: 'MEDIUM',
       description: 'Detects wildcard CORS origins.',
       recommendation: 'Restrict CORS to trusted origins.',
+      secureExample: 'cors({ origin: [\'https://app.example.test\'] })',
+      falsePositiveNote: 'Public static resources may differ.',
       reviewDepthBehavior: 'Runs in STANDARD and FULL review depths unless filtered by focus area.',
+      controlMappings: [
+        { framework: 'OWASP Top 10', value: 'A05:2021 Security Misconfiguration' },
+        { framework: 'CWE', value: 'CWE-942 Permissive Cross-domain Policy' },
+      ],
     },
     {
       id: 'SEC-001',
@@ -560,7 +566,13 @@ describe('rule catalog page', () => {
       severity: 'HIGH',
       description: 'Detects committed credentials.',
       recommendation: 'Rotate exposed credentials and use a managed secret store.',
+      secureExample: 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}',
+      falsePositiveNote: 'Sample keys may be fake.',
       reviewDepthBehavior: 'Runs in QUICK, STANDARD, and FULL review depths unless filtered by focus area.',
+      controlMappings: [
+        { framework: 'OWASP Top 10', value: 'A02:2021 Cryptographic Failures' },
+        { framework: 'CWE', value: 'CWE-798 Use of Hard-coded Credentials' },
+      ],
     },
   ];
 
@@ -574,6 +586,7 @@ describe('rule catalog page', () => {
     expect(screen.getByRole('heading', { name: 'Rule Catalog' })).toBeInTheDocument();
     expect(await screen.findByText('Secret detection')).toBeInTheDocument();
     expect(screen.getByText('API-001')).toBeInTheDocument();
+    expect(screen.getByText(/OWASP Top 10: A02:2021 Cryptographic Failures/)).toBeInTheDocument();
   });
 
   test('/rules search filters rendered rules', async () => {
@@ -588,6 +601,24 @@ describe('rule catalog page', () => {
 
     expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
     expect(screen.queryByText('Secret detection')).not.toBeInTheDocument();
+  });
+
+  test('/rules category and severity filters work', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    fireEvent.change(screen.getByLabelText('Filter category'), { target: { value: 'API_SECURITY' } });
+    expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
+    expect(screen.queryByText('Secret detection')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Filter category'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Filter severity'), { target: { value: 'HIGH' } });
+    expect(screen.getByText('Secret detection')).toBeInTheDocument();
+    expect(screen.queryByText('Wildcard CORS policy')).not.toBeInTheDocument();
   });
 
   test('/rules shows controlled empty and error states', async () => {

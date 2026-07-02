@@ -5,11 +5,25 @@ import type { RuleCatalogItem } from '../types';
 
 export default function RuleCatalogPage() {
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('');
+  const [severity, setSeverity] = useState('');
   const { data = [], error, isLoading } = useQuery<RuleCatalogItem[]>({ queryKey: ['rules'], queryFn: listRules });
   const normalized = query.trim().toLowerCase();
+  const categories = useMemo(() => Array.from(new Set(data.map((rule) => rule.category))).sort(), [data]);
   const rules = useMemo(
-    () => data.filter((rule) => [rule.id, rule.title, rule.category, rule.severity, rule.description, rule.recommendation].join(' ').toLowerCase().includes(normalized)),
-    [data, normalized],
+    () => data
+      .filter((rule) => !category || rule.category === category)
+      .filter((rule) => !severity || rule.severity === severity)
+      .filter((rule) => [
+        rule.id,
+        rule.title,
+        rule.category,
+        rule.severity,
+        rule.description,
+        rule.recommendation,
+        ...(rule.controlMappings ?? []).map((mapping) => `${mapping.framework} ${mapping.value}`),
+      ].join(' ').toLowerCase().includes(normalized)),
+    [category, data, normalized, severity],
   );
 
   return (
@@ -18,8 +32,27 @@ export default function RuleCatalogPage() {
       <h1>Rule Catalog</h1>
       <p className="lede">Review the deterministic checks SecureStack AI runs against uploaded or pasted files. Rules are defensive, local-first, and sorted by stable rule ID.</p>
 
-      <label htmlFor="rule-search">Search rules</label>
-      <input id="rule-search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Filter by rule ID, category, severity, or recommendation" />
+      <div className="filters" aria-label="Rule catalog filters">
+        <label htmlFor="rule-search">Search rules
+          <input id="rule-search" className="input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rule ID, title, mapping, or recommendation" />
+        </label>
+        <label htmlFor="rule-category">Filter category
+          <select id="rule-category" value={category} onChange={(event) => setCategory(event.target.value)}>
+            <option value="">All categories</option>
+            {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+        </label>
+        <label htmlFor="rule-severity">Filter severity
+          <select id="rule-severity" value={severity} onChange={(event) => setSeverity(event.target.value)}>
+            <option value="">All severities</option>
+            <option value="CRITICAL">CRITICAL</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+            <option value="INFO">INFO</option>
+          </select>
+        </label>
+      </div>
 
       {isLoading && <p>Loading rule catalog…</p>}
       {error && <p className="error" role="alert">Unable to load rule catalog.</p>}
@@ -39,6 +72,11 @@ export default function RuleCatalogPage() {
             <p><strong>Category:</strong> {rule.category}</p>
             <p>{rule.description}</p>
             <p><strong>Recommendation:</strong> {rule.recommendation}</p>
+            {!!rule.controlMappings?.length && (
+              <p className="helper">
+                <strong>Mappings:</strong> {rule.controlMappings.map((mapping) => `${mapping.framework}: ${mapping.value}`).join(' | ')}
+              </p>
+            )}
             {rule.reviewDepthBehavior && <p className="helper"><strong>Review depth:</strong> {rule.reviewDepthBehavior}</p>}
           </article>
         ))}
