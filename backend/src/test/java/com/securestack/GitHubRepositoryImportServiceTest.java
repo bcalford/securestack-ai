@@ -15,9 +15,16 @@ import static org.junit.jupiter.api.Assertions.*;
 class GitHubRepositoryImportServiceTest {
     @Test
     void parsesValidPublicGithubUrl() {
-        var service = serviceWithArchive(new byte[0]);
+        var ref = serviceWithArchive(new byte[0]).parse("https://github.com/securestack/demo");
 
-        var ref = service.parse("https://github.com/securestack/demo/");
+        assertEquals("securestack", ref.owner());
+        assertEquals("demo", ref.repo());
+        assertNull(ref.branch());
+    }
+
+    @Test
+    void parsesValidTrailingSlashGithubUrl() {
+        var ref = serviceWithArchive(new byte[0]).parse("https://github.com/securestack/demo/");
 
         assertEquals("securestack", ref.owner());
         assertEquals("demo", ref.repo());
@@ -26,100 +33,128 @@ class GitHubRepositoryImportServiceTest {
 
     @Test
     void parsesValidTreeBranchUrl() {
-        var service = serviceWithArchive(new byte[0]);
-
-        var ref = service.parse("https://github.com/securestack/demo/tree/feature/safe-branch");
+        var ref = serviceWithArchive(new byte[0]).parse("https://github.com/securestack/demo/tree/feature/safe-branch");
 
         assertEquals("feature/safe-branch", ref.branch());
     }
 
     @Test
-    void rejectsUnsupportedUrls() {
+    void rejectsUnsupportedUrlsWithSingleSafeMessage() {
         var service = serviceWithArchive(new byte[0]);
 
         assertAll(
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("https://example.com/owner/repo")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("http://github.com/owner/repo")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("https://user:pass@github.com/owner/repo")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("git@github.com:owner/repo.git")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("https://gist.github.com/owner/id")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("https://raw.githubusercontent.com/owner/repo/main/app.js")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("https://github.com/../repo")),
-                () -> assertThrows(IllegalArgumentException.class, () -> service.parse("https://github.com/owner/repo/archive/main.zip"))
+                () -> assertUrlRejected(service, "https://example.com/owner/repo"),
+                () -> assertUrlRejected(service, "http://github.com/owner/repo"),
+                () -> assertUrlRejected(service, "ssh://git@github.com/owner/repo"),
+                () -> assertUrlRejected(service, "git@github.com:owner/repo.git"),
+                () -> assertUrlRejected(service, "https://gist.github.com/owner/id"),
+                () -> assertUrlRejected(service, "https://raw.githubusercontent.com/owner/repo/main/app.js"),
+                () -> assertUrlRejected(service, "https://user:pass@github.com/owner/repo"),
+                () -> assertUrlRejected(service, "https://github.com/../repo"),
+                () -> assertUrlRejected(service, "https://github.com/owner"),
+                () -> assertUrlRejected(service, "https://github.com/owner/repo.git"),
+                () -> assertUrlRejected(service, "https://github.com/owner/repo?archive=https://evil.test/x.zip"),
+                () -> assertUrlRejected(service, "https://github.com/owner/repo#readme"),
+                () -> assertUrlRejected(service, "https://github.com/owner/repo/archive/main.zip")
         );
     }
 
     @Test
     void mapsArchiveEntriesToScanFileInputsSafelyWithoutExecutingCode() throws Exception {
-        var service = serviceWithArchive(new byte[0]);
         byte[] archive = zipWithFiles(
                 file("repo-main/src/app.js", "throw new Error('should not execute');"),
                 file("repo-main/node_modules/ignored.js", "const ignored = true;"),
                 file("repo-main/.git/config", "ignored")
         );
 
-        var files = service.zipToScanFiles(archive);
+        var files = serviceWithArchive(new byte[0]).zipToScanFiles(archive);
 
         assertEquals(1, files.size());
         assertEquals("src/app.js", files.get(0).fileName());
+        assertEquals("js", files.get(0).fileType());
         assertTrue(files.get(0).content().contains("should not execute"));
     }
 
     @Test
     void rejectsUnsafeArchiveEntryPath() throws Exception {
-        var service = serviceWithArchive(new byte[0]);
         byte[] archive = zipWithFiles(file("repo-main/../evil.js", "const bad = true;"));
 
-        assertThrows(IllegalArgumentException.class, () -> service.zipToScanFiles(archive));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> serviceWithArchive(new byte[0]).zipToScanFiles(archive));
+
+        assertEquals(GitHubRepositoryImportService.PROCESSING_ERROR, error.getMessage());
     }
 
     @Test
-    void enforcesMaxFileCount() throws Exception {
+    void rejectsTooManyArchiveFiles() throws Exception {
         ScanProperties properties = new ScanProperties();
         properties.setMaxScanFiles(1);
         var service = new GitHubRepositoryImportService(properties, (uri, max) -> zipWithFiles(file("repo/a.js", ""), file("repo/b.js", "")));
 
-        assertThrows(IllegalArgumentException.class, () -> service.importPublicRepository("https://github.com/owner/repo"));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.importPublicRepository("https://github.com/owner/repo"));
+
+        assertEquals(GitHubRepositoryImportService.PROCESSING_ERROR, error.getMessage());
     }
 
     @Test
-    void enforcesDownloadSizeThroughDownloaderLimit() throws Exception {
+    void rejectsUnsupportedFilesWhenNoSupportedFilesExist() throws Exception {
+        byte[] archive = zipWithFiles(file("repo/image.png", "not supported"));
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> serviceWithArchive(new byte[0]).zipToScanFiles(archive));
+
+        assertEquals(GitHubRepositoryImportService.NO_SUPPORTED_FILES_ERROR, error.getMessage());
+    }
+
+    @Test
+    void rejectsMalformedArchive() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> serviceWithArchive(new byte[0]).zipToScanFiles("not a zip".getBytes()));
+
+        assertEquals(GitHubRepositoryImportService.PROCESSING_ERROR, error.getMessage());
+    }
+
+    @Test
+    void rejectsOversizedArchiveDownload() {
         ScanProperties properties = new ScanProperties();
         properties.setMaxGithubDownloadSizeMb(1);
         AtomicReference<Integer> observedLimit = new AtomicReference<>();
         var service = new GitHubRepositoryImportService(properties, (uri, max) -> {
             observedLimit.set(max);
-            throw new IllegalArgumentException("GitHub repository archive exceeds maximum download size.");
+            throw new IllegalArgumentException(GitHubRepositoryImportService.DOWNLOAD_TOO_LARGE_ERROR);
         });
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.importPublicRepository("https://github.com/owner/repo"));
 
         assertEquals(1024 * 1024, observedLimit.get());
-        assertTrue(error.getMessage().contains("maximum download size"));
+        assertEquals(GitHubRepositoryImportService.DOWNLOAD_TOO_LARGE_ERROR, error.getMessage());
     }
 
     @Test
     void returnsControlledDownloadFailure() {
         var service = new GitHubRepositoryImportService(new ScanProperties(), (uri, max) -> {
-            throw new IllegalArgumentException("Unable to download the public GitHub repository archive.");
+            throw new IOException("connection refused: secret internal detail");
         });
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.importPublicRepository("https://github.com/owner/repo"));
 
-        assertEquals("Unable to download the public GitHub repository archive.", error.getMessage());
+        assertEquals(GitHubRepositoryImportService.DOWNLOAD_ERROR, error.getMessage());
     }
 
     @Test
-    void downloadsOnlyDeterministicGithubArchiveUrlAfterValidation() throws Exception {
+    void downloadsOnlyDeterministicGithubArchiveUrlAfterValidationWithoutTokens() throws Exception {
         AtomicReference<URI> requested = new AtomicReference<>();
         var service = new GitHubRepositoryImportService(new ScanProperties(), (uri, max) -> {
             requested.set(uri);
+            assertNull(uri.getUserInfo());
             return zipWithFiles(file("repo-main/app.js", "const ok = true;"));
         });
 
         service.importPublicRepository("https://github.com/owner/repo/tree/main");
 
         assertEquals(URI.create("https://github.com/owner/repo/archive/refs/heads/main.zip"), requested.get());
+    }
+
+    private static void assertUrlRejected(GitHubRepositoryImportService service, String url) {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> service.parse(url));
+        assertEquals(GitHubRepositoryImportService.URL_ERROR, error.getMessage());
     }
 
     private GitHubRepositoryImportService serviceWithArchive(byte[] archive) {
