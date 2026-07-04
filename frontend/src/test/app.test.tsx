@@ -390,13 +390,14 @@ describe('results page', () => {
     expect(finding.getByText('Rule ID: SEC-002')).toBeInTheDocument();
   });
 
-  test('report actions show PDF, SARIF, and JSON exports', async () => {
+  test('report actions show PDF, SARIF, JSON, and bundle exports', async () => {
     mockScanResponse();
     renderPath('/scans/scan-1');
 
     expect(await screen.findByText('Export PDF report')).toHaveAttribute('href', '/api/scans/scan-1/report');
     expect(screen.getByRole('button', { name: 'Download SARIF' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download JSON' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download bundle' })).toBeInTheDocument();
   });
 
   test('SARIF export downloads from the expected endpoint', async () => {
@@ -500,6 +501,57 @@ describe('results page', () => {
     expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
   });
 
+
+
+  test('bundle export downloads from the expected endpoint', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(scan), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(new Blob(['zip-bytes'], { type: 'application/zip' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/zip' },
+        }),
+      );
+
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:bundle');
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download bundle' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans/scan-1/bundle'));
+    expect(createObjectUrl).toHaveBeenCalled();
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:bundle');
+  });
+
+  test('bundle export failure shows a controlled error', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(scan), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'backend detail' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download bundle' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to download export bundle. Please try again.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
 
   test('results page shows bedrock provider', async () => {
     mockScanResponse(bedrockScan);

@@ -8,8 +8,10 @@ import com.securestack.model.Enums.RiskLevel;
 import com.securestack.model.Enums.Severity;
 import com.securestack.repository.FindingRepository;
 import com.securestack.repository.ScanRepository;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.UUID;
+import java.util.zip.ZipInputStream;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,6 +38,45 @@ class SarifExportIntegrationTest {
     @Autowired ScanRepository scans;
     @Autowired FindingRepository findings;
 
+
+
+    @Test
+    void bundleEndpointReturnsZipWithExpectedNonEmptyEntries() throws Exception {
+        Scan scan = saveScan("Bundle mapping");
+        scan.executiveSummary = "Executive token = abc123";
+        scan.remediationSummary = "Rotate token = abc123";
+        scan.files = List.of("src/Secret.java");
+        scans.save(scan);
+        saveFinding(scan.id, "SEC-002", Severity.HIGH, "src/Secret.java", 4, "Hardcoded password = supersecret");
+
+        MvcResult result = mvc.perform(get("/api/scans/{scanId}/bundle", scan.id))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith("application/zip"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Disposition", "attachment; filename=securestack-scan-" + scan.id + "-bundle.zip"))
+                .andReturn();
+
+        var entries = unzip(result.getResponse().getContentAsByteArray());
+        assertThat(entries).containsKeys("securestack-report.pdf", "securestack-findings.sarif.json", "securestack-summary.json", "README.txt");
+        assertThat(entries.get("securestack-report.pdf")).isNotEmpty();
+        assertThat(entries.get("securestack-findings.sarif.json")).contains("\"version\" : \"2.1.0\"");
+        assertThat(entries.get("securestack-summary.json")).contains("SecureStack JSON Report");
+        assertThat(entries.get("README.txt"))
+                .contains("Scan ID: " + scan.id)
+                .contains("Scan name: Bundle mapping")
+                .contains("Tool: SecureStack AI")
+                .contains("Raw uploaded file content is not included in this bundle")
+                .contains("Static analysis results require manual review");
+        assertThat(String.join("\n", entries.values()))
+                .doesNotContain("RAW_UPLOADED_SECRET_DO_NOT_EXPORT")
+                .doesNotContain("supersecret");
+    }
+
+    @Test
+    void missingBundleScanReturnsNotFound() throws Exception {
+        mvc.perform(get("/api/scans/{scanId}/bundle", UUID.randomUUID()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("NOT_FOUND"));
+    }
 
     @Test
     void sarifIncludesRequiredMetadataAndFingerprints() throws Exception {
@@ -171,6 +212,18 @@ class SarifExportIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(not(containsString("RAW_UPLOADED_SECRET_DO_NOT_EXPORT"))))
                 .andExpect(content().string(not(containsString("password = super-secret-password"))));
+    }
+
+
+    private java.util.Map<String, String> unzip(byte[] bytes) throws Exception {
+        java.util.Map<String, String> entries = new java.util.LinkedHashMap<>();
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+            java.util.zip.ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                entries.put(entry.getName(), new String(zip.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        return entries;
     }
 
     private Scan saveScan(String name) {

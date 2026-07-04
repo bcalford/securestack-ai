@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { downloadJsonReport, downloadSarif, reportUrl } from '../../api/client';
+import { downloadBundle, downloadJsonReport, downloadSarif, reportUrl } from '../../api/client';
 
 export default function ReportActions({ scanId }: { scanId: string }) {
   const [exportError, setExportError] = useState('');
   const [isDownloadingSarif, setIsDownloadingSarif] = useState(false);
   const [isDownloadingJson, setIsDownloadingJson] = useState(false);
+  const [isDownloadingBundle, setIsDownloadingBundle] = useState(false);
 
   async function handleSarifDownload() {
     setExportError('');
@@ -32,6 +33,18 @@ export default function ReportActions({ scanId }: { scanId: string }) {
     }
   }
 
+  async function handleBundleDownload() {
+    setExportError('');
+    setIsDownloadingBundle(true);
+    try {
+      await downloadBundle(scanId);
+    } catch {
+      setExportError('Unable to download export bundle. Please try again.');
+    } finally {
+      setIsDownloadingBundle(false);
+    }
+  }
+
   return (
     <section className="card report-actions">
       <h2>Export report</h2>
@@ -42,6 +55,9 @@ export default function ReportActions({ scanId }: { scanId: string }) {
       </button>{' '}
       <button className="btn secondary" type="button" onClick={handleJsonDownload} disabled={isDownloadingJson}>
         {isDownloadingJson ? 'Preparing JSON...' : 'Download JSON'}
+      </button>{' '}
+      <button className="btn secondary" type="button" onClick={handleBundleDownload} disabled={isDownloadingBundle}>
+        {isDownloadingBundle ? 'Preparing bundle...' : 'Download bundle'}
       </button>{' '}
       <Link className="btn secondary" to="/scans/new">Start another review</Link>
       {exportError && <p className="error" role="alert">{exportError}</p>}

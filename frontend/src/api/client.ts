@@ -66,6 +66,7 @@ export async function deleteScan(scanId: string) {
 export const reportUrl = (id: string) => `${API}/scans/${id}/report`;
 export const sarifUrl = (id: string) => `${API}/scans/${id}/sarif`;
 export const jsonReportUrl = (id: string) => `${API}/scans/${id}/export/json`;
+export const bundleUrl = (id: string) => `${API}/scans/${id}/bundle`;
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -88,4 +89,10 @@ export async function downloadJsonReport(scanId: string) {
   const response = await fetch(jsonReportUrl(scanId));
   if (!response.ok) throw new Error(await parseError(response));
   triggerDownload(await response.blob(), `securestack-scan-${scanId}.json`);
+}
+
+export async function downloadBundle(scanId: string) {
+  const response = await fetch(bundleUrl(scanId));
+  if (!response.ok) throw new Error(await parseError(response));
+  triggerDownload(await response.blob(), `securestack-scan-${scanId}-bundle.zip`);
 }
