@@ -4,9 +4,9 @@ set -euo pipefail
 # Detect common accidental duplicate/copy artifacts. This guard reports matches
 # only; it never deletes files or attempts to infer why they exist.
 patterns=(
-  '2.java' '2.ts' '2.tsx' '2.css' '2.json' '2.md' '2.yml' '2.yaml'
-  '3.java' '3.ts' '3.tsx'
-  'copy.*' 'Copy.*'
+  '* 2.java' '* 2.ts' '* 2.tsx' '* 2.css' '* 2.json' '* 2.md' '* 2.yml' '* 2.yaml'
+  '* 3.java' '* 3.ts' '* 3.tsx'
+  '* copy.*' '* Copy.*'
   '*.orig' '*.rej'
 )
 

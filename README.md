@@ -1,6 +1,6 @@
 # SecureStack AI
 
-SecureStack AI v0.3-alpha is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and PDF/SARIF report export.
+SecureStack AI v0.4-alpha is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and local report exports.
 
 ## Features
 
@@ -45,7 +45,7 @@ For a faster loop that skips backend packaging and frontend production build:
 make validate-quick
 ```
 
-The validation workflow includes duplicate/copy-file guardrails, conservative secret-safety checks, backend tests, frontend lint/tests/build, and Docker Compose configuration checks. GitHub Actions CI mirrors these validation categories for pushes and pull requests to `main`. The duplicate-file guard detects common accidental duplicate names such as `2.java`, `3.tsx`, `copy.*`, `*.orig`, and `*.rej`; it reports matches without deleting files or claiming to know their root cause. Optional local pre-commit hooks can be installed with `./scripts/install-hooks.sh`.
+The validation workflow includes duplicate/copy-file guardrails, conservative secret-safety checks, backend tests, frontend lint/tests/build, and Docker Compose configuration checks. GitHub Actions CI mirrors these validation categories for pushes and pull requests to `main`. The duplicate-file guard detects common accidental duplicate names such as `ApiController 2.java`, `SarifService 3.java`, `main 2.css`, `component copy.tsx`, `*.orig`, and `*.rej`; it reports matches without deleting files or claiming to know their root cause. Optional local pre-commit hooks can be installed with `./scripts/install-hooks.sh`.
 
 ## Local development
 

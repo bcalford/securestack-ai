@@ -1,6 +1,6 @@
 # Roadmap
 
-## v0.3-alpha implemented
+## v0.4-alpha implemented
 
 - Local Docker Compose runtime with mock AI as the default provider.
 - React/TypeScript/Vite frontend and Java 21/Spring Boot backend.
@@ -14,7 +14,7 @@
 - Optional local PostgreSQL Docker profile for persistence validation.
 - AWS architecture blueprint and deployment notes.
 
-## Known limitations in v0.3-alpha
+## Known limitations in v0.4-alpha
 
 - No authentication or authorization.
 - No public deployment or hosted scanner.
