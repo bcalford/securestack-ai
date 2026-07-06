@@ -415,6 +415,45 @@ describe('scan comparison', () => {
     expect(comparison.unchangedFindings).toHaveLength(0);
   });
 
+
+
+  test('comparison helper keeps unchanged findings separate from severity changes', () => {
+    const right: Scan = {
+      ...scan,
+      id: 'scan-unchanged',
+      findings: [scan.findings[0], { ...scan.findings[1], severity: 'HIGH' }],
+      severityCounts: { HIGH: 2 },
+      categoryCounts: scan.categoryCounts,
+    };
+
+    const comparison = compareScans(scan, right);
+
+    expect(comparison.unchangedFindings.map(item => item.right?.title)).toContain('Hardcoded credential');
+    expect(comparison.changedFindings.map(item => item.right?.title)).toContain('Wildcard CORS policy');
+    expect(comparison.changedFindings[0].severityChanged).toBe(true);
+    expect(comparison.severityDelta.HIGH).toBe(1);
+  });
+
+  test('compare page renders new and resolved findings', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(newerScan), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    renderPath('/scans/compare?left=scan-1&right=scan-2');
+
+    expect(await screen.findByRole('heading', { name: 'New findings' })).toBeInTheDocument();
+    expect(screen.getByText(/Missing rate limiting/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Resolved findings' })).toBeInTheDocument();
+    expect(screen.getByText(/Wildcard CORS policy/)).toBeInTheDocument();
+  });
+
+  test('empty comparison state is controlled', () => {
+    renderPath('/scans/compare');
+
+    expect(screen.getByRole('heading', { name: 'Regression review' })).toBeInTheDocument();
+    expect(screen.getByText(/Select two completed scans from history/i)).toBeInTheDocument();
+  });
+
   test('compare page renders two scan names and risk delta', async () => {
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
@@ -434,11 +473,12 @@ describe('scan comparison', () => {
 
     renderPath('/scans');
 
-    const checks = await screen.findAllByLabelText('Select for comparison');
+    const checks = await screen.findAllByLabelText('Select for regression review');
     fireEvent.click(checks[0]);
     fireEvent.click(checks[1]);
 
     expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('href', '/scans/compare?left=scan-1&right=scan-2');
+    expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('aria-disabled', 'false');
   });
 });
 

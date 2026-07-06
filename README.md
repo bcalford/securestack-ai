@@ -6,7 +6,7 @@ SecureStack AI v0.3-alpha is a local-first defensive security review application
 
 - Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis of public-only repositories.
 - Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns, with a backend/frontend rule catalog.
-- Risk scoring, severity/category breakdowns, prioritized findings, and local comparison between completed scans.
+- Risk scoring, severity/category breakdowns, prioritized findings, and local Regression review comparison between completed scans for risk trend, new findings, resolved findings, and unchanged findings.
 - Finding details with evidence, remediation guidance, secure examples, status updates, remediation workflow counts, and rule IDs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
 - Real sample report page, PDF report export, and SARIF 2.1.0 JSON export for completed reviews.
@@ -74,7 +74,7 @@ Click **Run sample security review** on the landing page or open:
 /scans/new?sample=full-portfolio-demo
 ```
 
-The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, review the remediation workflow summary, compare completed scans from scan history, and export PDF or SARIF from the results page. The sample report page provides a realistic report-style view for demos without claiming to be a hosted scanner.
+The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, review the remediation workflow summary, run a Regression review from scan history, and export PDF or SARIF from the results page. The sample report page provides a realistic report-style view for demos without claiming to be a hosted scanner.
 
 ## Screenshots
 
