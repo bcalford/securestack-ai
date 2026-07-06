@@ -63,9 +63,9 @@ The results dashboard renders Bedrock executive and remediation summaries with `
 If `AI_PROVIDER=bedrock` is selected but Bedrock cannot be invoked, static findings should still be available and the summary should fall back to a controlled message. Check AWS credentials, `AWS_REGION`, `BEDROCK_MODEL_ID`, model access, IAM permissions such as `bedrock:InvokeModel`, and timeout settings. Common causes include `AccessDeniedException`, using a model in the wrong region, a model ID typo, missing model access, missing local credentials, or a network timeout.
 
 
-## SARIF download issues
+## SARIF, JSON, and bundle export issues
 
-Create or open a valid scan before downloading SARIF. The endpoint is `GET /api/scans/{scanId}/sarif`; a missing scan ID returns the same not-found behavior as other scan lookups. SARIF support is export-only. SARIF import and GitHub code scanning upload/automation are not implemented.
+Create or open a valid scan before downloading exports. The endpoints are `GET /api/scans/{scanId}/sarif`, `GET /api/scans/{scanId}/export/json`, and `GET /api/scans/{scanId}/bundle`; a missing scan ID returns the same not-found behavior as other scan lookups. SARIF support is export-only. SARIF import and GitHub code scanning upload/automation are not implemented. Bundle generation returns a controlled error message if generated export packaging fails.
 
 ## Optional PostgreSQL mode issues
 

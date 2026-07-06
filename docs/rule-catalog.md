@@ -8,9 +8,13 @@ The catalog helps reviewers understand what the local deterministic scanner chec
 - Title
 - Category
 - Default severity
+- Confidence
 - Description
 - Recommendation
+- Secure example
+- False-positive note
 - Review depth behavior
+- Control mappings when available
 
 Rules are sorted by stable rule ID so API consumers and tests receive deterministic output. Review depth behavior mirrors scan execution: critical and high-severity rules run in quick, standard, and full scans; medium and low-severity rules run in standard and full scans; informational rules run in full scans.
 

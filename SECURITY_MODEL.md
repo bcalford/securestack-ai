@@ -15,7 +15,7 @@ The API is unauthenticated and intended for local/demo use only. Uploaded files,
 - Mock AI default; Bedrock raw content disabled by default.
 - Markdown summaries render without raw HTML or `rehype-raw`.
 - PDF content is escaped before rendering.
-- SARIF export includes finding metadata and does not include raw uploaded file contents.
+- SARIF, JSON, and bundle exports include generated review metadata and do not include raw uploaded file contents.
 - Optional PostgreSQL mode uses local development credentials and is not production multi-user hardening.
 - Errors are intended to be controlled JSON/messages rather than stack traces.
 
@@ -25,7 +25,7 @@ Do not expose this application publicly as-is. Any public deployment would requi
 
 ## Not implemented
 
-Authentication, authorization, public deployment/hosted scanning, private GitHub repository support, GitHub code scanning upload/automation, OpenAI, Semgrep execution/integration, SARIF import/ingestion, multi-user production storage, and production AWS deployment automation are not implemented.
+Authentication, authorization, public deployment/hosted scanning, private GitHub repository support, OAuth/GitHub App/token-based import, GitHub code scanning upload/automation, OpenAI, Semgrep execution/integration, SARIF import/ingestion, multi-user production storage, and production AWS deployment automation are not implemented.
 
 ## Defensive review artifacts
 
