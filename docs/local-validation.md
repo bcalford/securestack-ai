@@ -16,9 +16,9 @@ For a faster local loop that skips backend packaging and frontend production bui
 make validate-quick
 ```
 
-Use `./scripts/validate-all.sh --skip-docker` when Docker is unavailable and you need to run the non-Docker checks only.
+Use `./scripts/validate-all.sh --skip-docker` when Docker is unavailable and you need to run the non-Docker checks only. Use `./scripts/validate-all.sh --skip-package` to skip only backend packaging while still running the frontend production build. Use `./scripts/validate-all.sh --clean-frontend-install` when you need to remove `frontend/node_modules` and verify a clean `npm ci` install path.
 
-The validation script runs duplicate-file guardrails, secret-safety checks, backend tests, backend packaging unless `--quick` is set, frontend dependency installation if `node_modules` is missing, frontend lint/tests/build unless `--quick` is set, and Docker Compose configuration checks unless `--skip-docker` is set.
+The validation script always changes to the repository root before running checks, prints step headers for each phase, and exits nonzero on the first failed command with a clear failure message. It runs duplicate-file guardrails, secret-safety checks, backend tests, backend packaging unless `--quick` or `--skip-package` is set, frontend dependency installation if `node_modules` is missing or `--clean-frontend-install` is set, frontend lint/tests/build unless `--quick` is set, and Docker Compose configuration checks unless `--skip-docker` is set.
 
 GitHub Actions CI mirrors the same local validation categories for pull requests and pushes to `main`: backend test/package, frontend lint/test/build, duplicate-file guardrails, secret-safety checks, default Docker Compose config validation, and PostgreSQL Compose override config validation. Keep local validation passing before opening a pull request so CI remains a confirmation step rather than the first validation run.
 
@@ -33,7 +33,7 @@ make check-secrets
 
 `check-duplicates.sh` detects common accidental duplicate/copy artifacts including `2.java`, `2.ts`, `2.tsx`, `2.css`, `2.json`, `2.md`, `2.yml`, `2.yaml`, `3.java`, `3.ts`, `3.tsx`, `copy.*`, `Copy.*`, `*.orig`, and `*.rej`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
 
-`check-secrets.sh` performs conservative high-confidence checks for AWS access keys, private key headers, and obvious credential assignments while excluding known fake demo fixtures such as `frontend/src/data/demoSamples.ts` and `samples/**`.
+`check-secrets.sh` performs conservative high-confidence checks for real-looking AWS access keys, private key headers, GitHub/Slack tokens, and high-entropy credential assignments while excluding or filtering known fake demo fixtures, sample placeholders, and documentation examples.
 
 ## Optional local pre-commit hook
 

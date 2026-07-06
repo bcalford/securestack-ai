@@ -18,7 +18,7 @@ In Docker, nginx serves the frontend and proxies `/api` to the `backend` service
 
 ## Local validation script failures
 
-Run `./scripts/validate-all.sh` or `make validate` from the repository root. Use `./scripts/validate-all.sh --quick` or `make validate-quick` for a faster loop that skips backend packaging and frontend production build. If Docker is unavailable, use `./scripts/validate-all.sh --skip-docker` and report the Docker limitation separately.
+Run `./scripts/validate-all.sh` or `make validate` from any directory inside the repository; the script changes to the repository root before running checks. Use `./scripts/validate-all.sh --quick` or `make validate-quick` for a faster loop that skips backend packaging and frontend production build. Use `./scripts/validate-all.sh --skip-package` to skip only backend packaging, `./scripts/validate-all.sh --clean-frontend-install` to remove `frontend/node_modules` and run a fresh `npm ci`, and `./scripts/validate-all.sh --skip-docker` if Docker is unavailable. Report Docker limitations separately instead of treating skipped Docker checks as passing.
 
 ## Duplicate-file guard failures
 
@@ -26,7 +26,7 @@ Run `./scripts/validate-all.sh` or `make validate` from the repository root. Use
 
 ## Secret-safety guard failures
 
-`./scripts/check-secrets.sh` reports high-confidence risky patterns such as AWS access keys, private key headers, and obvious credential assignments. Known fake demo fixtures under `frontend/src/data/demoSamples.ts` and `samples/**` are excluded. If a real secret is reported, rotate it before removing it from the working tree.
+`./scripts/check-secrets.sh` reports high-confidence risky patterns such as AWS access keys, private key headers, and obvious credential assignments. Known fake demo fixtures, sample placeholders, and documentation examples are excluded or filtered to reduce false positives. If a real-looking key or private key header is reported, treat it as sensitive, rotate it before removing it from the working tree, and rerun `./scripts/check-secrets.sh`.
 
 ## Pre-commit hook installation
 
