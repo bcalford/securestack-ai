@@ -26,3 +26,7 @@ Do not expose this application publicly as-is. Any public deployment would requi
 ## Not implemented
 
 Authentication, authorization, public deployment/hosted scanning, private GitHub repository support, GitHub code scanning upload/automation, OpenAI, Semgrep execution/integration, SARIF import/ingestion, multi-user production storage, and production AWS deployment automation are not implemented.
+
+## Defensive review artifacts
+
+Security review artifacts are displayed with defensive terminology such as risk path, abuse case, recommended control, and verification step. The UI does not add exploit payloads or offensive walkthroughs; it summarizes backend-generated artifacts for remediation planning, owner assignment, and checklist-driven verification.

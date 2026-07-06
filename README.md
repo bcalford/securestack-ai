@@ -167,3 +167,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md)
 - [`docs/deployment-aws.md`](docs/deployment-aws.md)
 - [`docs/v0.3-release-notes.md`](docs/v0.3-release-notes.md)
+
+### Security review artifacts
+
+Completed scans expose deterministic backend-generated review artifacts in the results UI. The frontend loads the threat model, risk paths, fix plan, and security review checklist from the scan-specific artifact endpoints and presents them as concise collapsible sections. These artifacts use defensive wording only, are based on stored findings, and are intended to help prioritize remediation without providing exploit instructions.

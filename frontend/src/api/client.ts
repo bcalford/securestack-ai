@@ -1,4 +1,4 @@
-import type { RuleCatalogItem, Scan, ScanListItem } from '../types';
+import type { FixPlan, RiskPathResponse, RuleCatalogItem, Scan, ScanListItem, SecurityChecklist, ThreatModel } from '../types';
 
 const API = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -35,6 +35,28 @@ export async function getScan(id: string) {
   const response = await fetch(`${API}/scans/${id}`);
   if (!response.ok) throw new Error(await parseError(response));
   return response.json() as Promise<Scan>;
+}
+
+async function fetchReviewArtifact<T>(url: string, fallbackMessage: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(fallbackMessage);
+  return response.json() as Promise<T>;
+}
+
+export async function getThreatModel(scanId: string) {
+  return fetchReviewArtifact<ThreatModel>(`${API}/scans/${scanId}/threat-model`, 'Unable to load threat model. Please try again.');
+}
+
+export async function getRiskPaths(scanId: string) {
+  return fetchReviewArtifact<RiskPathResponse>(`${API}/scans/${scanId}/risk-paths`, 'Unable to load risk paths. Please try again.');
+}
+
+export async function getFixPlan(scanId: string) {
+  return fetchReviewArtifact<FixPlan>(`${API}/scans/${scanId}/fix-plan`, 'Unable to load fix plan. Please try again.');
+}
+
+export async function getChecklist(scanId: string) {
+  return fetchReviewArtifact<SecurityChecklist>(`${API}/scans/${scanId}/checklist`, 'Unable to load security review checklist. Please try again.');
 }
 
 export async function listScans() {

@@ -21,3 +21,7 @@ PDF reports and the sample report page include score, findings, remediation chec
 ## AWS blueprint
 
 See [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md) for App Runner and ECS Fargate deployment options that would require additional security controls before public use.
+
+## Security review artifact UI
+
+The results page includes a frontend-focused artifact panel for completed scans. It calls the backend-generated threat model, risk path grouping, fix plan, and checklist endpoints, then renders compact cards for assets, entry points, trust boundaries, abuse cases, recommended controls, related findings, remediation themes, effort, risk reduction, and verification steps. Artifact API failures are shown as controlled user-facing errors without exposing backend details.

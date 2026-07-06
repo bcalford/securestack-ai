@@ -36,3 +36,10 @@
 - Production AWS deployment automation.
 - Persistent multi-user storage with migrations and tenant/user boundaries.
 - Hosted demo with abuse controls.
+
+## v0.4-alpha artifact UI
+
+- Results page support for backend-generated threat model output.
+- Results page support for defensive risk path grouping.
+- Results page support for fix plan phases, effort, risk reduction, and verification steps.
+- Results page support for security review checklist status and related categories.
