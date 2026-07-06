@@ -31,7 +31,7 @@ make check-duplicates
 make check-secrets
 ```
 
-`check-duplicates.sh` detects common accidental duplicate/copy artifacts including `2.java`, `2.ts`, `2.tsx`, `2.css`, `2.json`, `2.md`, `2.yml`, `2.yaml`, `3.java`, `3.ts`, `3.tsx`, `copy.*`, `Copy.*`, `*.orig`, and `*.rej`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
+`check-duplicates.sh` detects common accidental duplicate/copy artifacts including `ApiController 2.java`, `main 2.css`, `package 2.json`, `README 2.md`, `SarifService 3.java`, `client 3.ts`, `component 3.tsx`, `component copy.tsx`, `component Copy.tsx`, `*.orig`, and `*.rej`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
 
 `check-secrets.sh` performs conservative high-confidence checks for real-looking AWS access keys, private key headers, GitHub/Slack tokens, and high-entropy credential assignments while excluding or filtering known fake demo fixtures, sample placeholders, and documentation examples.
 

@@ -169,6 +169,7 @@ class SarifExportIntegrationTest {
                 .andExpect(jsonPath("$.version").value("2.1.0"))
                 .andExpect(jsonPath("$['$schema']").value("https://json.schemastore.org/sarif-2.1.0.json"))
                 .andExpect(jsonPath("$.runs[0].tool.driver.name").value("SecureStack AI"))
+                .andExpect(jsonPath("$.runs[0].tool.driver.informationUri").value("https://github.com/bcalford/securestack-ai"))
                 .andExpect(jsonPath("$.runs[0].results", hasSize(5)))
                 .andExpect(jsonPath("$.runs[0].results[*].ruleId", contains("rule-critical", "rule-high", "rule-info", "rule-low", "rule-medium")))
                 .andExpect(jsonPath("$.runs[0].results[*].level", contains("error", "error", "note", "warning", "warning")))
