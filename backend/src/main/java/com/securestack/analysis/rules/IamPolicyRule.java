@@ -14,8 +14,15 @@ public class IamPolicyRule extends BaseSecurityRule {
     public Category category() { return Category.CLOUD_CONFIGURATION; }
     public Severity defaultSeverity() { return Severity.HIGH; }
     public boolean supports(ScanFileInput file) { return true; }
+    public String description() { return "Detects IAM-style policies with wildcard actions, wildcard resources, or administrator-level permissions."; }
+    public String recommendation() { return "Apply least privilege by scoping actions, resources, principals, and conditions to the required access path."; }
+    public String secureExample() { return "\"Action\": [\"s3:GetObject\"], \"Resource\": \"arn:aws:s3:::example-bucket/reports/*\""; }
+    public String falsePositiveNote() { return "Bootstrap or break-glass roles can require broader permissions, but should be isolated, monitored, and documented."; }
+    public java.util.List<com.securestack.analysis.SecurityRule.ControlMapping> controlMappings() {
+        return mappings("A01:2021 Broken Access Control", "CWE-266 Incorrect Privilege Assignment", "PW.7 Review and analyze human-readable code", "V4 Access Control");
+    }
 
     public List<Finding> analyze(ScanFileInput file) {
-        return scan(file, Pattern.compile("Action.*[*]|Resource.*[*]|AdministratorAccess|iam:[*]|s3:[*]", Pattern.CASE_INSENSITIVE), "Overly permissive IAM policy", Severity.HIGH, Category.CLOUD_CONFIGURATION, "Apply least privilege and scope actions/resources.");
+        return scan(file, Pattern.compile("Action.*[*]|Resource.*[*]|AdministratorAccess|iam:[*]|s3:[*]", Pattern.CASE_INSENSITIVE), "Overly permissive IAM policy", Severity.HIGH, Category.CLOUD_CONFIGURATION, recommendation());
     }
 }

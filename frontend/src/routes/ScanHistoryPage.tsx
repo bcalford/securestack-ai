@@ -21,24 +21,26 @@ export default function ScanHistoryPage() {
 
   return (
     <main className="container">
+      <p className="eyebrow">Regression review</p>
       <h1>Previous scans</h1>
       {isLoading && <p>Loading scan history…</p>}
       {error && <p className="error">Unable to load scan history.</p>}
       {!isLoading && !data.length && <p className="card">No scans yet. Start a new security review to populate history.</p>}
       {!!data.length && (
-        <section className="card comparison-picker" aria-label="Scan comparison picker">
-          <h2>Compare completed scans</h2>
-          <p>Select two scans to compare risk, finding counts, new findings, resolved findings, and severity/category differences.</p>
+        <section className="card comparison-picker" aria-label="Regression review picker">
+          <h2>Regression review</h2>
+          <p>Select two completed scans to review risk trend, new findings, resolved findings, unchanged findings, and severity/category movement.</p>
           <Link className={`btn ${selected.length === 2 ? '' : 'disabled'}`} aria-disabled={selected.length !== 2} to={compareHref}>Compare selected scans</Link>
+          <p className="helper">{selected.length}/2 scans selected. Comparison stays local and uses stored scan results.</p>
         </section>
       )}
       {data.map(scan => (
         <article className="card history-row" key={scan.id}>
           <label>
             <input type="checkbox" checked={selected.includes(scan.id)} onChange={() => toggleScan(scan.id)} />
-            Select for comparison
+            Select for regression review
           </label>
-          <p><Link to={`/scans/${scan.id}`}>{scan.name}</Link> — {scan.riskScore}/100 — {scan.findingCount} findings</p>
+          <p><Link to={`/scans/${scan.id}`}>{scan.name}</Link> — {new Date(scan.createdAt).toLocaleString()} — {scan.riskScore}/100 — {scan.findingCount} findings</p>
         </article>
       ))}
     </main>

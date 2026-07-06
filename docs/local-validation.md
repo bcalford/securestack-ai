@@ -16,9 +16,9 @@ For a faster local loop that skips backend packaging and frontend production bui
 make validate-quick
 ```
 
-Use `./scripts/validate-all.sh --skip-docker` when Docker is unavailable and you need to run the non-Docker checks only.
+Use `./scripts/validate-all.sh --skip-docker` when Docker is unavailable and you need to run the non-Docker checks only. Use `./scripts/validate-all.sh --skip-package` to skip only backend packaging while still running the frontend production build. Use `./scripts/validate-all.sh --clean-frontend-install` when you need to remove `frontend/node_modules` and verify a clean `npm ci` install path.
 
-The validation script runs duplicate-file guardrails, secret-safety checks, backend tests, backend packaging unless `--quick` is set, frontend dependency installation if `node_modules` is missing, frontend lint/tests/build unless `--quick` is set, and Docker Compose configuration checks unless `--skip-docker` is set.
+The validation script always changes to the repository root before running checks, prints step headers for each phase, and exits nonzero on the first failed command with a clear failure message. It runs duplicate-file guardrails, secret-safety checks, backend tests, backend packaging unless `--quick` or `--skip-package` is set, frontend dependency installation if `node_modules` is missing or `--clean-frontend-install` is set, frontend lint/tests/build unless `--quick` is set, and Docker Compose configuration checks unless `--skip-docker` is set.
 
 GitHub Actions CI mirrors the same local validation categories for pull requests and pushes to `main`: backend test/package, frontend lint/test/build, duplicate-file guardrails, secret-safety checks, default Docker Compose config validation, and PostgreSQL Compose override config validation. Keep local validation passing before opening a pull request so CI remains a confirmation step rather than the first validation run.
 
@@ -33,7 +33,7 @@ make check-secrets
 
 `check-duplicates.sh` detects common accidental duplicate/copy artifacts including `ApiController 2.java`, `main 2.css`, `package 2.json`, `README 2.md`, `SarifService 3.java`, `client 3.ts`, `component 3.tsx`, `component copy.tsx`, `component Copy.tsx`, `*.orig`, and `*.rej`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
 
-`check-secrets.sh` performs conservative high-confidence checks for AWS access keys, private key headers, and obvious credential assignments while excluding known fake demo fixtures such as `frontend/src/data/demoSamples.ts` and `samples/**`.
+`check-secrets.sh` performs conservative high-confidence checks for real-looking AWS access keys, private key headers, GitHub/Slack tokens, and high-entropy credential assignments while excluding or filtering known fake demo fixtures, sample placeholders, and documentation examples.
 
 ## Optional local pre-commit hook
 
@@ -121,7 +121,7 @@ The PostgreSQL credentials in the override are development-only local defaults a
 3. Run the review.
 4. Confirm the summary provider is `mock`.
 5. Optionally open `/scans/new`, choose **GitHub URL**, enter a public repository URL, and confirm the UI explains that import is public-only, local, token-free, and does not execute imported code.
-6. Review the risk score, prioritized findings, finding details, rule catalog, remediation workflow summary, scan comparison, scan history, PDF export, sample report page, and SARIF download.
+6. Review the risk score, prioritized findings, finding details, rule catalog, remediation workflow summary, scan comparison, scan history, PDF export, SARIF download, JSON export, export bundle, sample report page, threat model, risk paths, fix plan, and security review checklist.
 
 ## Optional Bedrock smoke test
 

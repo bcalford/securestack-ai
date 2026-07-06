@@ -1,5 +1,6 @@
 package com.securestack.analysis;
 
+import com.securestack.dto.Dto.ControlMappingDto;
 import com.securestack.dto.Dto.RuleCatalogItem;
 import java.util.Comparator;
 import java.util.List;
@@ -20,9 +21,15 @@ public class RuleCatalogService {
                 rule.name(),
                 rule.category(),
                 rule.defaultSeverity(),
+                rule.confidence(),
                 rule.description(),
                 rule.recommendation(),
-                rule.reviewDepthBehavior()))
+                rule.secureExample(),
+                rule.falsePositiveNote(),
+                rule.reviewDepthBehavior(),
+                rule.controlMappings().stream()
+                    .map(mapping -> new ControlMappingDto(mapping.framework(), mapping.value()))
+                    .toList()))
             .sorted(Comparator.comparing(RuleCatalogItem::id))
             .toList();
     }

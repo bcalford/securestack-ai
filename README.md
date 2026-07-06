@@ -5,19 +5,19 @@ SecureStack AI v0.4-alpha is a local-first defensive security review application
 ## Features
 
 - Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis of public-only repositories.
-- Static checks for secrets, authentication/session risks, API misconfiguration, dependency scripts, Dockerfiles, and cloud/IaC patterns, with a backend/frontend rule catalog.
-- Risk scoring, severity/category breakdowns, prioritized findings, and local comparison between completed scans.
-- Finding details with evidence, remediation guidance, secure examples, status updates, remediation workflow counts, and rule IDs.
+- Expanded static checks for secrets, authentication/session risks, API security, dependency scripts, Dockerfiles, cloud/IaC configuration, logging/data exposure, and input-validation patterns, with a searchable backend/frontend rule catalog.
+- Risk scoring, severity/category breakdowns, prioritized findings, defensive risk-path grouping, and local Regression review comparison between completed scans for risk trend, new findings, resolved findings, and unchanged findings.
+- Finding details with masked evidence, remediation guidance, secure examples, status updates, remediation workflow counts, rule IDs, and fix-plan inputs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
-- Real sample report page, PDF report export, and SARIF 2.1.0 JSON export for completed reviews.
-- One-command local validation, duplicate/copy artifact guardrails, and GitHub Actions CI validation.
+- Real sample report page, PDF report export, hardened SARIF 2.1.0 JSON export, SecureStack JSON report export, and ZIP export bundle for completed reviews.
+- One-command local validation, duplicate/copy artifact guardrails, conservative secret checks, Docker Compose config validation, and GitHub Actions CI validation.
 
 ## Tech stack
 
 - **Frontend:** React, TypeScript, Vite, React Router, TanStack Query, Vitest, Testing Library.
 - **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, default H2 persistence, optional local PostgreSQL profile, Maven.
 - **Security analysis:** Rule classes for deterministic defensive findings plus risk scoring and provider-abstracted AI summaries.
-- **Reporting:** Server-generated PDF export and backend SARIF 2.1.0 export.
+- **Reporting:** Server-generated PDF export, backend SARIF 2.1.0 export, SecureStack JSON export, and ZIP export bundle.
 - **Local runtime:** Docker Compose.
 - **Optional cloud AI:** Amazon Bedrock when manually configured.
 
@@ -74,7 +74,7 @@ Click **Run sample security review** on the landing page or open:
 /scans/new?sample=full-portfolio-demo
 ```
 
-The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, review the remediation workflow summary, compare completed scans from scan history, and export PDF or SARIF from the results page. The sample report page provides a realistic report-style view for demos without claiming to be a hosted scanner.
+The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, review the remediation workflow summary, run a Regression review from scan history, and export PDF, SARIF, JSON, or the ZIP bundle from the results page. The sample report page provides a realistic report-style view for demos without claiming to be a hosted scanner.
 
 ## Screenshots
 
@@ -125,7 +125,7 @@ Keep `BEDROCK_SEND_RAW_CONTENT=false` for private code and sample reviews. Do no
 
 ## Architecture
 
-The frontend submits pasted or uploaded files to the backend scan API. The backend validates untrusted inputs, rejects unsafe paths and unsupported/binary/oversized files, expands ZIP files safely, runs rule-based analysis, stores scan and finding metadata locally, generates a mock or Bedrock summary, and serves results plus PDF and SARIF exports.
+The frontend submits pasted or uploaded files to the backend scan API. The backend validates untrusted inputs, rejects unsafe paths and unsupported/binary/oversized files, expands ZIP files safely, runs rule-based analysis, stores scan and finding metadata locally, generates a mock or Bedrock summary, and serves results plus PDF, SARIF, JSON, and bundle exports, and generates defensive review artifacts.
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.md), and [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md).
 
@@ -159,6 +159,10 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`docs/scan-comparison.md`](docs/scan-comparison.md)
 - [`docs/rule-catalog.md`](docs/rule-catalog.md)
 - [`docs/sarif-export.md`](docs/sarif-export.md)
+- [`docs/threat-model.md`](docs/threat-model.md)
+- [`docs/fix-plan.md`](docs/fix-plan.md)
+- [`docs/security-review-checklist.md`](docs/security-review-checklist.md)
+- [`docs/export-bundle.md`](docs/export-bundle.md)
 - [`docs/postgres-profile.md`](docs/postgres-profile.md)
 - [`docs/demo-script.md`](docs/demo-script.md)
 - [`docs/technical-review-guide.md`](docs/technical-review-guide.md)
@@ -167,3 +171,8 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`docs/aws-architecture-blueprint.md`](docs/aws-architecture-blueprint.md)
 - [`docs/deployment-aws.md`](docs/deployment-aws.md)
 - [`docs/v0.3-release-notes.md`](docs/v0.3-release-notes.md)
+- [`docs/v0.4-release-notes.md`](docs/v0.4-release-notes.md)
+
+### Security review artifacts
+
+Completed scans expose deterministic backend-generated review artifacts in the results UI. The frontend loads the threat model, risk paths, fix plan, and security review checklist from the scan-specific artifact endpoints and presents them as concise collapsible sections. These artifacts use defensive wording only, are based on stored findings, and are intended to help prioritize remediation without providing exploit instructions.

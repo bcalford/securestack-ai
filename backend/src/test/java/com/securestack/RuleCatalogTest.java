@@ -24,14 +24,31 @@ class RuleCatalogTest {
         mvc.perform(get("/api/rules"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].id").exists())
-            .andExpect(jsonPath("$[?(@.id == 'SEC-001')]").exists());
+            .andExpect(jsonPath("$[?(@.id == 'SEC-001')]").exists())
+            .andExpect(jsonPath("$[?(@.id == 'SEC-001')].controlMappings[0].framework").exists())
+            .andExpect(jsonPath("$[?(@.id == 'SEC-001')].secureExample").exists())
+            .andExpect(jsonPath("$[?(@.id == 'SEC-001')].falsePositiveNote").exists());
     }
 
-    @Test void eachRuleHasCategoryAndSeverity() {
+    @Test void eachRuleHasRequiredMetadata() {
         assertThat(catalog.list()).isNotEmpty().allSatisfy(rule -> {
             assertThat(rule.category()).isNotNull();
             assertThat(rule.severity()).isNotNull();
+            assertThat(rule.confidence()).isNotNull();
+            assertThat(rule.description()).isNotBlank();
+            assertThat(rule.recommendation()).isNotBlank();
+            assertThat(rule.secureExample()).isNotBlank();
+            assertThat(rule.falsePositiveNote()).isNotBlank();
         });
+    }
+
+    @Test void controlMappingsArePresentWhereExpected() {
+        assertThat(catalog.list())
+            .filteredOn(rule -> rule.id().equals("SEC-001"))
+            .singleElement()
+            .satisfies(rule -> assertThat(rule.controlMappings())
+                .extracting(mapping -> mapping.framework())
+                .contains("OWASP Top 10", "CWE", "NIST SSDF-lite", "ASVS-lite"));
     }
 
     @Test void outputIsDeterministicAndSorted() {

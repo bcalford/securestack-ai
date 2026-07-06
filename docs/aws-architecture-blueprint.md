@@ -43,4 +43,4 @@ Authentication, authorization, rate limiting, upload abuse protection, strict fi
 
 ## Deployment status
 
-This repository is not currently a public production deployment or hosted scanner. Production AWS deployment automation remains future work.
+This repository is not currently a public production deployment or hosted scanner. Production AWS deployment automation remains future work; there is no Terraform/CDK pipeline, no public endpoint, no production RDS migration plan, and no managed multi-user storage in v0.4-alpha.

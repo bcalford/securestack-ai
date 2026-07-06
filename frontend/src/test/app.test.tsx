@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
-import type { Finding, Scan } from '../types';
+import type { Finding, FixPlan, RiskPathResponse, Scan, SecurityChecklist, ThreatModel } from '../types';
 import { topPriorityFindings } from '../utils/risk';
 import { compareScans } from '../utils/scanComparison';
 
@@ -56,6 +56,72 @@ const scan: Scan = {
   ],
 };
 
+
+const threatModel: ThreatModel = {
+  scanId: 'scan-1',
+  scanName: 'Demo review',
+  assets: ['Application source code', 'Environment secrets'],
+  entryPoints: ['HTTP API routes'],
+  trustBoundaries: ['Browser to API boundary'],
+  dataFlows: ['Request data flows through API validation'],
+  assumptions: ['Uploaded code is reviewed defensively and not executed'],
+  abuseCases: ['Abuse case: exposed credentials could expand access if not rotated'],
+  recommendedControls: ['Recommended control: rotate secrets and use managed secret storage'],
+  relatedFindingIds: ['finding-1'],
+};
+
+const riskPaths: RiskPathResponse = {
+  scanId: 'scan-1',
+  scanName: 'Demo review',
+  riskPaths: [{
+    id: 'credential-exposure-path',
+    name: 'Credential exposure risk path',
+    narrative: 'Credential findings increase the chance of unauthorized access if values remain active.',
+    relatedFindingIds: ['finding-1'],
+    relatedRuleIds: ['SEC-002'],
+    affectedFiles: ['app.js'],
+    remediationThemes: ['Rotate exposed values and move secrets to managed storage'],
+  }],
+};
+
+const fixPlan: FixPlan = {
+  scanId: 'scan-1',
+  scanName: 'Demo review',
+  fixFirst: [{
+    phase: 'fix first',
+    title: 'Rotate hardcoded credential',
+    severity: 'HIGH',
+    estimatedEffort: 'Small',
+    expectedRiskReduction: 'High',
+    ownerCategory: 'backend',
+    verificationSteps: ['Confirm secret is removed from source', 'Confirm replacement value is managed outside code'],
+    affectedFiles: ['app.js'],
+    relatedRuleIds: ['SEC-002'],
+  }],
+  fixNext: [{
+    phase: 'fix next',
+    title: 'Restrict CORS policy',
+    severity: 'MEDIUM',
+    estimatedEffort: 'Small',
+    expectedRiskReduction: 'Medium',
+    ownerCategory: 'backend',
+    verificationSteps: ['Confirm allowed origins are explicitly configured'],
+    affectedFiles: ['app.js'],
+    relatedRuleIds: ['API-001'],
+  }],
+  hardeningBacklog: [],
+};
+
+const checklist: SecurityChecklist = {
+  scanId: 'scan-1',
+  scanName: 'Demo review',
+  items: [{ id: 'secrets-reviewed', label: 'Secrets reviewed', status: 'pending', guidance: 'Review related finding IDs before release.' }],
+};
+
+function jsonResponse(body: unknown, status = 200) {
+  return Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
+}
+
 const bedrockScan: Scan = {
   ...scan,
   aiProvider: 'bedrock',
@@ -78,12 +144,27 @@ function renderPath(path = '/') {
 }
 
 function mockScanResponse(body: Scan = scan) {
-  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-    new Response(JSON.stringify(body), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    }),
-  );
+  vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
+    const url = String(input);
+    if (url.endsWith('/threat-model')) return jsonResponse(threatModel);
+    if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
+    if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
+    if (url.endsWith('/checklist')) return jsonResponse(checklist);
+    return jsonResponse(body);
+  });
+}
+
+function mockResultsFetchWithEndpoint(endpoint: string, body: unknown, status = 200) {
+  return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+    const url = String(input);
+    if (init?.method === 'PATCH') return new Response(null, { status: 204 });
+    if (url.endsWith('/threat-model')) return jsonResponse(threatModel);
+    if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
+    if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
+    if (url.endsWith('/checklist')) return jsonResponse(checklist);
+    if (url.endsWith(endpoint)) return jsonResponse(body, status);
+    return jsonResponse(scan);
+  });
 }
 
 beforeEach(() => {
@@ -334,6 +415,45 @@ describe('scan comparison', () => {
     expect(comparison.unchangedFindings).toHaveLength(0);
   });
 
+
+
+  test('comparison helper keeps unchanged findings separate from severity changes', () => {
+    const right: Scan = {
+      ...scan,
+      id: 'scan-unchanged',
+      findings: [scan.findings[0], { ...scan.findings[1], severity: 'HIGH' }],
+      severityCounts: { HIGH: 2 },
+      categoryCounts: scan.categoryCounts,
+    };
+
+    const comparison = compareScans(scan, right);
+
+    expect(comparison.unchangedFindings.map(item => item.right?.title)).toContain('Hardcoded credential');
+    expect(comparison.changedFindings.map(item => item.right?.title)).toContain('Wildcard CORS policy');
+    expect(comparison.changedFindings[0].severityChanged).toBe(true);
+    expect(comparison.severityDelta.HIGH).toBe(1);
+  });
+
+  test('compare page renders new and resolved findings', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(newerScan), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    renderPath('/scans/compare?left=scan-1&right=scan-2');
+
+    expect(await screen.findByRole('heading', { name: 'New findings' })).toBeInTheDocument();
+    expect(screen.getByText(/Missing rate limiting/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Resolved findings' })).toBeInTheDocument();
+    expect(screen.getByText(/Wildcard CORS policy/)).toBeInTheDocument();
+  });
+
+  test('empty comparison state is controlled', () => {
+    renderPath('/scans/compare');
+
+    expect(screen.getByRole('heading', { name: 'Regression review' })).toBeInTheDocument();
+    expect(screen.getByText(/Select two completed scans from history/i)).toBeInTheDocument();
+  });
+
   test('compare page renders two scan names and risk delta', async () => {
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
@@ -353,11 +473,12 @@ describe('scan comparison', () => {
 
     renderPath('/scans');
 
-    const checks = await screen.findAllByLabelText('Select for comparison');
+    const checks = await screen.findAllByLabelText('Select for regression review');
     fireEvent.click(checks[0]);
     fireEvent.click(checks[1]);
 
     expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('href', '/scans/compare?left=scan-1&right=scan-2');
+    expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('aria-disabled', 'false');
   });
 });
 
@@ -390,28 +511,89 @@ describe('results page', () => {
     expect(finding.getByText('Rule ID: SEC-002')).toBeInTheDocument();
   });
 
-  test('report actions show PDF and SARIF exports', async () => {
+
+  test('results page exposes security review artifact sections', async () => {
+    mockScanResponse();
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findByRole('heading', { name: 'Security review artifacts' })).toBeInTheDocument();
+    expect(await screen.findByText('Threat model')).toBeInTheDocument();
+    expect(screen.getByText('Risk paths')).toBeInTheDocument();
+    expect(screen.getByText('Fix plan')).toBeInTheDocument();
+    expect(screen.getByText('Security review checklist')).toBeInTheDocument();
+  });
+
+  test('mocked threat model renders defensive sections', async () => {
+    mockScanResponse();
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findByText('Application source code')).toBeInTheDocument();
+    expect(screen.getByText('HTTP API routes')).toBeInTheDocument();
+    expect(screen.getByText('Browser to API boundary')).toBeInTheDocument();
+    expect(screen.getByText('Abuse case: exposed credentials could expand access if not rotated')).toBeInTheDocument();
+    expect(screen.getByText('Recommended control: rotate secrets and use managed secret storage')).toBeInTheDocument();
+  });
+
+  test('mocked risk path renders narrative and related findings', async () => {
+    mockScanResponse();
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByText('Risk paths'));
+    expect(screen.getByText('Credential exposure risk path')).toBeInTheDocument();
+    expect(screen.getByText(/Credential findings increase/)).toBeInTheDocument();
+    expect(screen.getByText(/finding-1/)).toBeInTheDocument();
+    expect(screen.getByText(/Rotate exposed values/)).toBeInTheDocument();
+  });
+
+  test('mocked fix plan renders phases and verification steps', async () => {
+    mockScanResponse();
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByText('Fix plan'));
+    expect(screen.getByText('Fix first')).toBeInTheDocument();
+    expect(screen.getByText('Rotate hardcoded credential')).toBeInTheDocument();
+    expect(screen.getByText('Confirm secret is removed from source')).toBeInTheDocument();
+    expect(screen.getByText('Fix next')).toBeInTheDocument();
+  });
+
+  test('mocked checklist renders status and category', async () => {
+    mockScanResponse();
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByText('Security review checklist'));
+    expect(screen.getByText('Secrets reviewed')).toBeInTheDocument();
+    expect(screen.getByText('pending')).toBeInTheDocument();
+    expect(screen.getByText('Category: secrets-reviewed')).toBeInTheDocument();
+  });
+
+  test('artifact API failure shows a controlled error', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async input => {
+      const url = String(input);
+      if (url.endsWith('/threat-model')) return jsonResponse({ message: 'backend detail' }, 500);
+      if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
+      if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
+      if (url.endsWith('/checklist')) return jsonResponse(checklist);
+      return jsonResponse(scan);
+    });
+
+    renderPath('/scans/scan-1');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load security review artifacts. Please try again.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
+
+  test('report actions show PDF, SARIF, JSON, and bundle exports', async () => {
     mockScanResponse();
     renderPath('/scans/scan-1');
 
     expect(await screen.findByText('Export PDF report')).toHaveAttribute('href', '/api/scans/scan-1/report');
     expect(screen.getByRole('button', { name: 'Download SARIF' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download JSON' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download bundle' })).toBeInTheDocument();
   });
 
   test('SARIF export downloads from the expected endpoint', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify(scan), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ version: '2.1.0' }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }),
-      );
+    const fetchMock = mockResultsFetchWithEndpoint('/sarif', { version: '2.1.0' });
 
     const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:sarif');
     const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
@@ -426,6 +608,33 @@ describe('results page', () => {
   });
 
   test('SARIF export failure shows a controlled error', async () => {
+    mockResultsFetchWithEndpoint('/sarif', { message: 'backend detail' }, 500);
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download SARIF' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to download SARIF export. Please try again.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
+
+
+  test('JSON export downloads from the expected endpoint', async () => {
+    const fetchMock = mockResultsFetchWithEndpoint('/export/json', { format: 'SecureStack JSON Report' });
+
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:json');
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download JSON' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans/scan-1/export/json'));
+    expect(createObjectUrl).toHaveBeenCalled();
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:json');
+  });
+
+  test('JSON export failure shows a controlled error', async () => {
     vi.spyOn(globalThis, 'fetch')
       .mockResolvedValueOnce(
         new Response(JSON.stringify(scan), {
@@ -442,9 +651,49 @@ describe('results page', () => {
 
     renderPath('/scans/scan-1');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Download SARIF' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Download JSON' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to download SARIF export. Please try again.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to download JSON export. Please try again.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
+
+
+
+  test('bundle export downloads from the expected endpoint', async () => {
+    const fetchMock = mockResultsFetchWithEndpoint('/bundle', new Blob(['zip-bytes'], { type: 'application/zip' }));
+
+    const createObjectUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:bundle');
+    const revokeObjectUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download bundle' }));
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans/scan-1/bundle'));
+    expect(createObjectUrl).toHaveBeenCalled();
+    expect(revokeObjectUrl).toHaveBeenCalledWith('blob:bundle');
+  });
+
+  test('bundle export failure shows a controlled error', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(scan), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'backend detail' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+    renderPath('/scans/scan-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Download bundle' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to download export bundle. Please try again.');
     expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
   });
 
@@ -507,11 +756,7 @@ describe('results page', () => {
   });
 
   test('finding status update behavior calls the API without reloading from the network', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_input, init) => (
-      init?.method === 'PATCH'
-        ? new Response(null, { status: 204 })
-        : new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } })
-    ));
+    const fetchMock = mockResultsFetchWithEndpoint('/unused', {});
 
     renderPath('/scans/scan-1');
 
@@ -551,7 +796,13 @@ describe('rule catalog page', () => {
       severity: 'MEDIUM',
       description: 'Detects wildcard CORS origins.',
       recommendation: 'Restrict CORS to trusted origins.',
+      secureExample: 'cors({ origin: [\'https://app.example.test\'] })',
+      falsePositiveNote: 'Public static resources may differ.',
       reviewDepthBehavior: 'Runs in STANDARD and FULL review depths unless filtered by focus area.',
+      controlMappings: [
+        { framework: 'OWASP Top 10', value: 'A05:2021 Security Misconfiguration' },
+        { framework: 'CWE', value: 'CWE-942 Permissive Cross-domain Policy' },
+      ],
     },
     {
       id: 'SEC-001',
@@ -560,7 +811,13 @@ describe('rule catalog page', () => {
       severity: 'HIGH',
       description: 'Detects committed credentials.',
       recommendation: 'Rotate exposed credentials and use a managed secret store.',
+      secureExample: 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}',
+      falsePositiveNote: 'Sample keys may be fake.',
       reviewDepthBehavior: 'Runs in QUICK, STANDARD, and FULL review depths unless filtered by focus area.',
+      controlMappings: [
+        { framework: 'OWASP Top 10', value: 'A02:2021 Cryptographic Failures' },
+        { framework: 'CWE', value: 'CWE-798 Use of Hard-coded Credentials' },
+      ],
     },
   ];
 
@@ -574,6 +831,7 @@ describe('rule catalog page', () => {
     expect(screen.getByRole('heading', { name: 'Rule Catalog' })).toBeInTheDocument();
     expect(await screen.findByText('Secret detection')).toBeInTheDocument();
     expect(screen.getByText('API-001')).toBeInTheDocument();
+    expect(screen.getByText(/OWASP Top 10: A02:2021 Cryptographic Failures/)).toBeInTheDocument();
   });
 
   test('/rules search filters rendered rules', async () => {
@@ -588,6 +846,24 @@ describe('rule catalog page', () => {
 
     expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
     expect(screen.queryByText('Secret detection')).not.toBeInTheDocument();
+  });
+
+  test('/rules category and severity filters work', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    fireEvent.change(screen.getByLabelText('Filter category'), { target: { value: 'API_SECURITY' } });
+    expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
+    expect(screen.queryByText('Secret detection')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Filter category'), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText('Filter severity'), { target: { value: 'HIGH' } });
+    expect(screen.getByText('Secret detection')).toBeInTheDocument();
+    expect(screen.queryByText('Wildcard CORS policy')).not.toBeInTheDocument();
   });
 
   test('/rules shows controlled empty and error states', async () => {

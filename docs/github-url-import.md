@@ -43,4 +43,4 @@ GitHub URL import reuses the same scan safeguards as other file inputs:
 - **Backend validation failure:** the URL shape, archive contents, file count, file size, or file type may be unsupported.
 - **Download failure:** confirm the public repository exists and GitHub can serve the archive without authentication.
 
-GitHub URL import is not GitHub code scanning integration. SARIF support remains export-only.
+GitHub URL import is not private repository import, OAuth, a GitHub App, token-based import, webhook automation, or GitHub code scanning integration. SARIF support remains export-only.

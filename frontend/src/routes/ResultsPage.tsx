@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getScan } from '../api/client';
+import { getChecklist, getFixPlan, getRiskPaths, getScan, getThreatModel } from '../api/client';
 import CategoryBreakdown from '../components/dashboard/CategoryBreakdown';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import SeverityChart from '../components/dashboard/SeverityChart';
@@ -10,7 +10,7 @@ import FindingFilters, { type Filters } from '../components/findings/FindingFilt
 import FindingsTable from '../components/findings/FindingsTable';
 import RemediationStatusSummary from '../components/findings/RemediationStatusSummary';
 import ReportActions from '../components/reports/ReportActions';
-import type { Finding } from '../types';
+import type { ChecklistItem, Finding, FixPlanItem, RiskPath, ThreatModel } from '../types';
 import { buildRiskExplanation, sortFindingsByPriority, topPriorityFindings } from '../utils/risk';
 
 const markdownElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'strong', 'em', 'ul', 'ol', 'li', 'code', 'pre'];
@@ -20,6 +20,79 @@ function MarkdownSummary({ children }: { children: string }) {
     <div className="markdown-summary">
       <ReactMarkdown allowedElements={markdownElements}>{children}</ReactMarkdown>
     </div>
+  );
+}
+
+function CompactList({ items }: { items: string[] }) {
+  const safeItems = items ?? [];
+  return safeItems.length ? (
+    <ul>
+      {safeItems.map(item => <li key={item}>{item}</li>)}
+    </ul>
+  ) : <p className="helper">No items generated for this section.</p>;
+}
+
+function ThreatModelCard({ threatModel }: { threatModel: ThreatModel }) {
+  return (
+    <details className="artifact-card" open>
+      <summary>Threat model</summary>
+      <div className="artifact-grid">
+        <div><h4>Assets</h4><CompactList items={threatModel.assets} /></div>
+        <div><h4>Entry points</h4><CompactList items={threatModel.entryPoints} /></div>
+        <div><h4>Trust boundaries</h4><CompactList items={threatModel.trustBoundaries} /></div>
+        <div><h4>Abuse cases</h4><CompactList items={threatModel.abuseCases} /></div>
+        <div><h4>Recommended controls</h4><CompactList items={threatModel.recommendedControls} /></div>
+      </div>
+    </details>
+  );
+}
+
+function RiskPathCard({ riskPaths }: { riskPaths: RiskPath[] }) {
+  return (
+    <details className="artifact-card">
+      <summary>Risk paths</summary>
+      {(riskPaths ?? []).map(path => (
+        <article className="artifact-item" key={path.id}>
+          <h4>{path.name}</h4>
+          <p>{path.narrative}</p>
+          <p><b>Related findings:</b> {path.relatedFindingIds.length ? path.relatedFindingIds.join(', ') : 'None identified'}</p>
+          <p><b>Remediation theme:</b> {path.remediationThemes.join('; ')}</p>
+        </article>
+      ))}
+    </details>
+  );
+}
+
+function FixPlanGroup({ title, items }: { title: string; items: FixPlanItem[] }) {
+  return (
+    <div>
+      <h4>{title}</h4>
+      {(items ?? []).length ? (items ?? []).map(item => (
+        <article className="artifact-item" key={`${item.phase}-${item.title}`}>
+          <b>{item.title}</b>
+          <p><span className="badge">Effort: {item.estimatedEffort}</span><span className="badge">Risk reduction: {item.expectedRiskReduction}</span></p>
+          <p><b>Verification steps:</b></p>
+          <CompactList items={item.verificationSteps} />
+        </article>
+      )) : <p className="helper">No items in this phase.</p>}
+    </div>
+  );
+}
+
+function ChecklistCard({ items }: { items: ChecklistItem[] }) {
+  return (
+    <details className="artifact-card">
+      <summary>Security review checklist</summary>
+      <div className="checklist-grid">
+        {(items ?? []).map(item => (
+          <article className="artifact-item" key={item.id}>
+            <b>{item.label}</b>
+            <p><span className="badge">{item.status}</span><span className="badge">Category: {item.id}</span></p>
+            <p>{item.guidance}</p>
+          </article>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -74,6 +147,19 @@ export default function ResultsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['scan', id],
     queryFn: () => getScan(id!),
+  });
+  const reviewArtifacts = useQuery({
+    queryKey: ['review-artifacts', id],
+    enabled: Boolean(data?.id),
+    queryFn: async () => {
+      const [threatModel, riskPaths, fixPlan, checklist] = await Promise.all([
+        getThreatModel(data!.id),
+        getRiskPaths(data!.id),
+        getFixPlan(data!.id),
+        getChecklist(data!.id),
+      ]);
+      return { threatModel, riskPaths, fixPlan, checklist };
+    },
   });
   const [filters, setFilters] = useState<Filters>({ search: '', severity: '', category: '', status: '', confidence: '', sortBy: 'priority' });
 
@@ -133,6 +219,31 @@ export default function ResultsPage() {
         <MarkdownSummary>{data.executiveSummary}</MarkdownSummary>
         <h3>Remediation summary</h3>
         <MarkdownSummary>{data.remediationSummary}</MarkdownSummary>
+      </section>
+
+      <section className="card review-artifacts" aria-labelledby="review-artifacts-heading">
+        <p className="eyebrow">Backend-generated review artifacts</p>
+        <h2 id="review-artifacts-heading">Security review artifacts</h2>
+        <p className="helper">Concise defensive outputs for planning remediation and verification.</p>
+        {reviewArtifacts.isError && (
+          <p className="error" role="alert">Unable to load security review artifacts. Please try again.</p>
+        )}
+        {reviewArtifacts.isLoading && <p className="helper">Loading security review artifacts…</p>}
+        {reviewArtifacts.data && (
+          <div className="artifact-stack">
+            <ThreatModelCard threatModel={reviewArtifacts.data.threatModel} />
+            <RiskPathCard riskPaths={reviewArtifacts.data.riskPaths.riskPaths} />
+            <details className="artifact-card">
+              <summary>Fix plan</summary>
+              <div className="artifact-grid">
+                <FixPlanGroup title="Fix first" items={reviewArtifacts.data.fixPlan.fixFirst} />
+                <FixPlanGroup title="Fix next" items={reviewArtifacts.data.fixPlan.fixNext} />
+                <FixPlanGroup title="Hardening backlog" items={reviewArtifacts.data.fixPlan.hardeningBacklog} />
+              </div>
+            </details>
+            <ChecklistCard items={reviewArtifacts.data.checklist.items} />
+          </div>
+        )}
       </section>
 
       <ReportActions scanId={data.id} />

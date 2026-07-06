@@ -10,27 +10,48 @@ function Delta({ value, suffix = '' }: { value: number; suffix?: string }) {
   return <strong className={value > 0 ? 'delta-up' : value < 0 ? 'delta-down' : ''}>{label}{suffix}</strong>;
 }
 
+function formatDate(value: string) {
+  return new Date(value).toLocaleString();
+}
+
 function findingTitle(item: ComparedFinding) {
   const finding = item.right ?? item.left;
   return finding ? `${finding.title} — ${finding.fileName}${finding.lineNumber ? `:${finding.lineNumber}` : ''}` : item.key;
+}
+
+function DeltaList({ title, deltas, empty }: { title: string; deltas: Record<string, number>; empty: string }) {
+  const entries = Object.entries(deltas).filter(([, value]) => value !== 0);
+  return (
+    <article className="card">
+      <h2>{title}</h2>
+      {!entries.length ? <p>{empty}</p> : (
+        <ul className="delta-list">
+          {entries.map(([name, value]) => <li key={name}><span>{name}</span><Delta value={value} /></li>)}
+        </ul>
+      )}
+    </article>
+  );
 }
 
 function FindingComparisonList({ title, items, empty }: { title: string; items: ComparedFinding[]; empty: string }) {
   return (
     <section className="card comparison-list">
       <h2>{title}</h2>
-      {!items.length ? <p>{empty}</p> : items.map(item => {
+      {!items.length ? <p className="empty-state">{empty}</p> : items.map(item => {
         const left = item.left;
         const right = item.right;
         return (
-          <article key={item.key}>
+          <article key={item.key} className="comparison-finding">
             <h3>{findingTitle(item)}</h3>
             <p>
-              {left && <span className={`badge sev-${left.severity}`}>Left: {left.severity}</span>}
-              {right && <span className={`badge sev-${right.severity}`}>Right: {right.severity}</span>}
-              {left && right && left.category !== right.category && <span className="badge">Category: {left.category} → {right.category}</span>}
-              {left && right && left.severity !== right.severity && <span className="badge">Severity changed</span>}
+              {left && <span className={`badge sev-${left.severity}`}>Baseline: {left.severity}</span>}
+              {right && <span className={`badge sev-${right.severity}`}>Follow-up: {right.severity}</span>}
+              {left && right && item.statusChanged && <span className="badge">Status: {left.status} → {right.status}</span>}
+              {left && right && item.fileChanged && <span className="badge">File: {left.fileName} → {right.fileName}</span>}
+              {left && right && item.categoryChanged && <span className="badge">Category: {left.category} → {right.category}</span>}
+              {left && right && item.severityChanged && <span className="badge">Severity changed</span>}
             </p>
+            {right?.evidence && <p className="helper">Evidence: {right.evidence}</p>}
           </article>
         );
       })}
@@ -56,31 +77,37 @@ export default function ScanComparePage() {
   ), [leftQuery.data, rightQuery.data]);
 
   if (!leftId || !rightId) {
-    return <main className="container"><h1>Compare scans</h1><p className="error">Select two completed scans from history to compare.</p><Link className="btn" to="/scans">Back to scan history</Link></main>;
+    return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><p className="error">Select two completed scans from history to compare.</p><Link className="btn" to="/scans">Back to scan history</Link></main>;
   }
 
-  if (leftQuery.isLoading || rightQuery.isLoading) return <main className="container"><h1>Compare scans</h1><p>Loading scan comparison…</p></main>;
+  if (leftQuery.isLoading || rightQuery.isLoading) return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><p>Loading scan comparison…</p></main>;
   if (leftQuery.error || rightQuery.error || !leftQuery.data || !rightQuery.data || !comparison) {
-    return <main className="container"><h1>Compare scans</h1><p className="error">Unable to load both completed scans for comparison.</p><Link className="btn" to="/scans">Back to scan history</Link></main>;
+    return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><p className="error">Unable to load both completed scans for comparison.</p><Link className="btn" to="/scans">Back to scan history</Link></main>;
   }
 
   return (
     <main className="container">
-      <p className="eyebrow">Local deterministic comparison</p>
-      <h1>Compare scans</h1>
+      <p className="eyebrow">Regression review</p>
+      <h1>Risk trend</h1>
       <section className="comparison-hero">
-        <article className="card"><h2>Left baseline</h2><Link to={`/scans/${leftQuery.data.id}`}>{leftQuery.data.name}</Link><p>{leftQuery.data.riskScore}/100 · {leftQuery.data.findingCount} findings</p></article>
-        <article className="card"><h2>Right comparison</h2><Link to={`/scans/${rightQuery.data.id}`}>{rightQuery.data.name}</Link><p>{rightQuery.data.riskScore}/100 · {rightQuery.data.findingCount} findings</p></article>
+        <article className="card"><h2>Baseline scan</h2><Link to={`/scans/${leftQuery.data.id}`}>{leftQuery.data.name}</Link><p>{formatDate(leftQuery.data.createdAt)}</p><p>{leftQuery.data.riskScore}/100 · {leftQuery.data.findingCount} findings</p></article>
+        <article className="card"><h2>Follow-up scan</h2><Link to={`/scans/${rightQuery.data.id}`}>{rightQuery.data.name}</Link><p>{formatDate(rightQuery.data.createdAt)}</p><p>{rightQuery.data.riskScore}/100 · {rightQuery.data.findingCount} findings</p></article>
       </section>
-      <section className="grid cards" aria-label="Comparison deltas">
+      <section className="grid cards" aria-label="Regression review deltas">
         <article className="card"><span>Risk score delta</span><Delta value={comparison.riskScoreDelta} /></article>
         <article className="card"><span>Finding count delta</span><Delta value={comparison.findingCountDelta} /></article>
-        <article className="card"><span>Severity/category differences</span><strong>{comparison.changedFindings.length}</strong></article>
+        <article className="card"><span>New findings</span><strong>{comparison.newFindings.length}</strong></article>
+        <article className="card"><span>Resolved findings</span><strong>{comparison.resolvedFindings.length}</strong></article>
+        <article className="card"><span>Unchanged findings</span><strong>{comparison.unchangedFindings.length}</strong></article>
       </section>
-      <FindingComparisonList title="New findings" items={comparison.newFindings} empty="No new findings in the right scan." />
-      <FindingComparisonList title="Resolved findings" items={comparison.resolvedFindings} empty="No findings were resolved." />
-      <FindingComparisonList title="Unchanged findings" items={comparison.unchangedFindings} empty="No unchanged findings." />
-      <FindingComparisonList title="Severity/category differences" items={comparison.changedFindings} empty="No severity or category changes." />
+      <section className="grid cards" aria-label="Severity and category deltas">
+        <DeltaList title="Severity delta" deltas={comparison.severityDelta} empty="No severity count changes." />
+        <DeltaList title="Category delta" deltas={comparison.categoryDelta} empty="No category count changes." />
+      </section>
+      <FindingComparisonList title="New findings" items={comparison.newFindings} empty="No new findings in the follow-up scan." />
+      <FindingComparisonList title="Resolved findings" items={comparison.resolvedFindings} empty="No findings were resolved in the follow-up scan." />
+      <FindingComparisonList title="Unchanged findings" items={comparison.unchangedFindings} empty="No unchanged findings between these scans." />
+      <FindingComparisonList title="Changed findings" items={comparison.changedFindings} empty="No severity, status, file, or category changes." />
     </main>
   );
 }

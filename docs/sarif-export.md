@@ -1,6 +1,6 @@
 # SARIF export
 
-SecureStack AI can export completed scan findings as SARIF 2.1.0 JSON for local review and tool interoperability experiments. It does not import SARIF and does not upload SARIF to GitHub code scanning.
+SecureStack AI can export completed scan findings as SARIF 2.1.0 JSON for local review and tool interoperability experiments. The v0.4-alpha export is deterministic, includes deduplicated rule metadata, omits raw uploaded file contents, and maps SecureStack severities to SARIF levels. It does not import SARIF and does not upload SARIF to GitHub code scanning.
 
 ## How to download
 

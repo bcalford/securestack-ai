@@ -13,6 +13,19 @@ permissions:
   contents: read
 
 jobs:
+  guardrails:
+    name: Duplicate and secret guardrails
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run duplicate-file guardrail
+        run: ./scripts/check-duplicates.sh
+
+      - name: Run secret-safety guardrail
+        run: ./scripts/check-secrets.sh
+
   backend:
     name: Backend test and package
     runs-on: ubuntu-latest
@@ -34,6 +47,14 @@ jobs:
       - name: Package backend
         working-directory: backend
         run: mvn package
+
+      - name: Upload backend test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-surefire-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
 
   frontend:
     name: Frontend lint, test, and build
@@ -59,31 +80,22 @@ jobs:
 
       - name: Test frontend
         working-directory: frontend
-        run: npm run test
+        run: npm run test -- --reporter=default --reporter=junit --outputFile.junit=vitest-results.xml
 
       - name: Build frontend
         working-directory: frontend
         run: npm run build
 
-  duplicate-file-check:
-    name: Duplicate-file check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Run duplicate-file guardrail
-        run: ./scripts/check-duplicates.sh
-
-  secret-safety-check:
-    name: Secret-safety check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Run secret-safety guardrail
-        run: ./scripts/check-secrets.sh
+      - name: Upload frontend test output on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-output
+          path: |
+            frontend/vitest-results.xml
+            frontend/coverage/
+            frontend/test-results/
+          if-no-files-found: ignore
 
   docker-compose-config:
     name: Docker Compose config
@@ -94,13 +106,6 @@ jobs:
 
       - name: Validate default Docker Compose config
         run: docker compose config
-
-  postgres-compose-config:
-    name: PostgreSQL Compose config
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
 
       - name: Validate PostgreSQL Docker Compose config
         run: docker compose -f docker-compose.yml -f docker-compose.postgres.yml config

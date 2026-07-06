@@ -4,7 +4,11 @@ import com.securestack.dto.Dto.*;
 import com.securestack.analysis.RuleCatalogService;
 import com.securestack.github.GitHubRepositoryImportService;
 import com.securestack.report.ReportService;
+import com.securestack.report.JsonExportService;
+import com.securestack.report.BundleExportException;
+import com.securestack.report.BundleExportService;
 import com.securestack.service.ScanService;
+import com.securestack.review.SecurityReviewArtifactService;
 import com.securestack.sarif.SarifService;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +25,13 @@ public class ApiController {
     private final ScanService scans;
     private final ReportService reports;
     private final SarifService sarif;
+    private final JsonExportService jsonExports;
+    private final BundleExportService bundles;
+    private final SecurityReviewArtifactService reviewArtifacts;
     private final RuleCatalogService ruleCatalog;
     private final GitHubRepositoryImportService githubImport;
 
-    ApiController(ScanService scans, ReportService reports, SarifService sarif, RuleCatalogService ruleCatalog, GitHubRepositoryImportService githubImport) { this.scans = scans; this.reports = reports; this.sarif = sarif; this.ruleCatalog = ruleCatalog; this.githubImport = githubImport; }
+    ApiController(ScanService scans, ReportService reports, SarifService sarif, JsonExportService jsonExports, BundleExportService bundles, SecurityReviewArtifactService reviewArtifacts, RuleCatalogService ruleCatalog, GitHubRepositoryImportService githubImport) { this.scans = scans; this.reports = reports; this.sarif = sarif; this.jsonExports = jsonExports; this.bundles = bundles; this.reviewArtifacts = reviewArtifacts; this.ruleCatalog = ruleCatalog; this.githubImport = githubImport; }
 
     @GetMapping("/health")
     Map<String, String> health() { return Map.of("status", "ok", "service", "securestack-ai", "version", "1.0.0"); }
@@ -55,12 +62,21 @@ public class ApiController {
     @DeleteMapping("/scans/{sid}") @ResponseStatus(HttpStatus.NO_CONTENT) void delete(@PathVariable UUID sid) { scans.delete(sid); }
     @GetMapping("/scans/{id}/report") ResponseEntity<byte[]> report(@PathVariable UUID id) { return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=securestack-report.pdf").contentType(MediaType.APPLICATION_PDF).body(reports.pdf(id)); }
     @GetMapping("/scans/{id}/sarif") Map<String, Object> sarif(@PathVariable UUID id) { return sarif.export(id); }
+    @GetMapping("/scans/{id}/export/json") Map<String, Object> jsonExport(@PathVariable UUID id) { return jsonExports.export(id); }
+    @GetMapping("/scans/{id}/bundle") ResponseEntity<byte[]> bundle(@PathVariable UUID id) { return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=securestack-scan-" + id + "-bundle.zip").contentType(MediaType.valueOf("application/zip")).body(bundles.bundle(id)); }
+    @GetMapping("/scans/{id}/threat-model") ThreatModelDto threatModel(@PathVariable UUID id) { return reviewArtifacts.threatModel(id); }
+    @GetMapping("/scans/{id}/risk-paths") RiskPathResponseDto riskPaths(@PathVariable UUID id) { return reviewArtifacts.riskPaths(id); }
+    @GetMapping("/scans/{id}/fix-plan") FixPlanDto fixPlan(@PathVariable UUID id) { return reviewArtifacts.fixPlan(id); }
+    @GetMapping("/scans/{id}/checklist") SecurityChecklistDto checklist(@PathVariable UUID id) { return reviewArtifacts.checklist(id); }
 
     @ExceptionHandler(NoSuchElementException.class)
     ResponseEntity<ErrorResponse> notFound(Exception e) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("NOT_FOUND", "Requested scan or finding was not found.", List.of())); }
 
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<ErrorResponse> validation(Exception e) { return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_ERROR", e.getMessage(), List.of())); }
+
+    @ExceptionHandler(BundleExportException.class)
+    ResponseEntity<ErrorResponse> bundleFailure(Exception e) { log.error("Bundle export failed", e); return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("BUNDLE_EXPORT_ERROR", "Unable to generate export bundle.", List.of())); }
 
     @ExceptionHandler(Exception.class)
     ResponseEntity<ErrorResponse> unexpected(Exception e) { log.error("Unexpected API error", e); return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("INTERNAL_ERROR", "Unexpected server error.", List.of())); }
