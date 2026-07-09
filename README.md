@@ -6,11 +6,11 @@ SecureStack AI v0.5.1 is a local-first defensive security review application for
 
 - Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis of public-only repositories.
 - Expanded static checks for secrets, authentication/session risks, API security, dependency scripts, Dockerfiles, cloud/IaC configuration, logging/data exposure, and input-validation patterns, with a searchable backend/frontend rule catalog.
-- Risk scoring, severity/category breakdowns, prioritized findings, defensive risk-path grouping, and local Regression review comparison between completed scans for risk trend, new findings, resolved findings, and unchanged findings.
+- Risk scoring, severity/category breakdowns, prioritized findings, threat model, defensive risk paths, fix plan, security review checklist, and local regression comparison between completed scans for risk trend, new findings, resolved findings, and unchanged findings.
 - Finding details with masked evidence, remediation guidance, secure examples, status updates, remediation workflow counts, rule IDs, and fix-plan inputs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
-- Real sample report page, PDF report export, hardened SARIF 2.1.0 JSON export, SecureStack JSON report export, and ZIP export bundle for completed reviews.
-- Consistent, accessible frontend design system: shared UI components (cards, badges, page headers, empty/error/loading states), design tokens, keyboard-navigable controls, visible focus states, and severity indicators that always pair color with text.
+- Real sample report page plus PDF, SARIF, JSON, and ZIP bundle exports for completed reviews.
+- Dark-first redesigned frontend with a light mode option, shared UI components (cards, badges, page headers, empty/error/loading states), design tokens, keyboard-navigable controls, visible focus states, and severity indicators that always pair color with text.
 - One-command local validation, duplicate/copy artifact guardrails, conservative secret checks, Docker Compose config validation, and GitHub Actions CI validation.
 
 ## Tech stack
@@ -83,9 +83,9 @@ The app preloads intentionally vulnerable fixture files with fake demo-only secr
 
 ![Landing page](docs/screenshots/landing-page.png)
 
-### Guided sample review
+### New review flow
 
-![Guided sample review](docs/screenshots/sample-review.png)
+![New review flow](docs/screenshots/new-scan.png)
 
 ### Results overview
 
@@ -95,13 +95,29 @@ The app preloads intentionally vulnerable fixture files with fake demo-only secr
 
 ![Finding details](docs/screenshots/finding-details.png)
 
+### Export center
+
+![Export center](docs/screenshots/export-center.png)
+
+### Rule catalog
+
+![Rule catalog](docs/screenshots/rule-catalog.png)
+
 ### Scan history
 
 ![Scan history](docs/screenshots/scan-history.png)
 
-### PDF report
+### Regression comparison
 
-![PDF report](docs/screenshots/pdf-report.png)
+![Regression comparison](docs/screenshots/scan-comparison.png)
+
+### Sample report
+
+![Sample report](docs/screenshots/sample-report.png)
+
+### Light mode option
+
+![Light mode option](docs/screenshots/light-mode.png)
 
 ## Optional Bedrock mode
 
