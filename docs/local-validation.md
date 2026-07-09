@@ -2,6 +2,19 @@
 
 Use these commands to verify the local application before sharing changes. The preferred path is the one-command validation script or matching Make targets.
 
+
+## Required local tools
+
+SecureStack AI v0.8.0-beta expects these tools for local validation and demo walkthroughs:
+
+- Java 21
+- Maven
+- Node.js 20 or newer
+- npm
+- Docker Compose through Docker Desktop or the Docker CLI
+
+The repository includes `.java-version` and `.nvmrc` for common local version managers. CI is aligned to Java 21 and Node.js 20.
+
 ## Clean-machine evaluator path
 
 From a new checkout, run the same deterministic validation path before starting the app:
@@ -66,6 +79,13 @@ mvn test
 mvn package
 ```
 
+Use `mvn test` for the standard backend test loop. Use `mvn package` before release or demo handoff when you need to confirm the packaged Spring Boot artifact also builds. To rerun from a clean Maven build output directory, use:
+
+```bash
+cd backend
+mvn clean test
+```
+
 ## Frontend
 
 ```bash
@@ -74,6 +94,14 @@ npm ci
 npm run lint
 npm run test
 npm run build
+```
+
+Use `npm ci` for normal validation so dependency installation stays locked to `package-lock.json`. Do not use random `npm install` commands during validation; reserve `npm install` for intentional dependency changes that are reviewed with the lockfile diff. If `node_modules` becomes corrupted or inconsistent, remove it and reinstall from the lockfile:
+
+```bash
+cd frontend
+rm -rf node_modules
+npm ci
 ```
 
 ## Docker

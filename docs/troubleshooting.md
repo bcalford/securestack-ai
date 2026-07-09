@@ -16,6 +16,28 @@ docker compose up
 
 In Docker, nginx serves the frontend and proxies `/api` to the `backend` service. Do not depend on a runtime `VITE_API_BASE_URL` inside the built Vite app.
 
+
+## Dependency and build environment issues
+
+Confirm Java 21, Maven, Node.js 20 or newer, npm, and Docker Compose / Docker Desktop are installed before running release validation. The frontend declares Node.js `>=20`, and `.nvmrc` pins the local default to Node 20 for version managers. The backend Maven project targets Java 21, and `.java-version` pins the local default to 21 for version managers.
+
+For frontend dependency problems, prefer a clean lockfile install instead of incremental package changes:
+
+```bash
+cd frontend
+rm -rf node_modules
+npm ci
+```
+
+For backend test problems that may involve stale build output, rerun Maven from a clean target directory:
+
+```bash
+cd backend
+mvn clean test
+```
+
+Do not run broad dependency upgrades to clear warnings during beta stabilization. If `npm audit --omit=dev` reports runtime dependency concerns, record the output and evaluate targeted fixes separately.
+
 ## Local validation script failures
 
 Run `./scripts/validate-all.sh` or `make validate` from the repository, or run `./scripts/validate-all.sh` from any subdirectory inside the repository; the script changes to the repository root before running checks. Use `./scripts/validate-all.sh --quick` or `make validate-quick` for a faster loop that skips backend packaging and frontend production build. Use `./scripts/validate-all.sh --skip-package` to skip only backend packaging, `./scripts/validate-all.sh --clean-frontend-install` to remove `frontend/node_modules` and run a fresh `npm ci`, and `./scripts/validate-all.sh --skip-docker` if Docker is unavailable. Report Docker limitations separately instead of treating skipped Docker checks as passing.

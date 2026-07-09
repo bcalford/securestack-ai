@@ -19,8 +19,14 @@ SecureStack AI v0.8.0-beta is a local-first defensive security review applicatio
 - **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, default H2 persistence, optional local PostgreSQL profile, Maven.
 - **Security analysis:** Rule classes for deterministic defensive findings plus risk scoring and provider-abstracted AI summaries.
 - **Reporting:** Server-generated PDF export, backend SARIF 2.1.0 export, SecureStack JSON export, and ZIP export bundle.
-- **Local runtime:** Docker Compose.
+- **Local runtime:** Docker Compose / Docker Desktop.
 - **Optional cloud AI:** Amazon Bedrock when manually configured.
+
+## Tooling expectations
+
+Use Java 21 with Maven for the backend, Node.js 20 or newer with npm for the frontend, and Docker Compose through Docker Desktop or the Docker CLI for local container validation. The repository includes `.java-version` and `.nvmrc` so common tool-version managers select Java 21 and Node 20 automatically.
+
+For normal validation, use `npm ci` in `frontend/` so installed packages match `package-lock.json`. Avoid ad hoc `npm install` unless intentionally updating frontend dependencies and reviewing the resulting lockfile changes. Use `mvn test` for backend test validation and `mvn package` when verifying the packaged backend artifact.
 
 ## Quick start
 
