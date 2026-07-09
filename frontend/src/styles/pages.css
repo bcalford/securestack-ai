@@ -1,0 +1,81 @@
+/* Page-specific composition: hero panels, score cards, and section spacing */
+
+.hero-panel,
+.results-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.8fr);
+  gap: var(--space-5);
+  align-items: center;
+  margin: var(--space-5) 0;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.hero-panel h1 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.4vw, 3rem);
+  line-height: 1.1;
+}
+
+.lede {
+  color: var(--color-text-muted);
+  font-size: 1.15rem;
+}
+
+.preview,
+.score-card {
+  padding: var(--space-5);
+  color: var(--color-text-on-dark);
+  background: var(--color-panel-dark);
+  border: 1px solid var(--color-panel-dark-border);
+  border-radius: var(--radius-md);
+}
+
+.score-card {
+  text-align: center;
+}
+
+.score-card strong {
+  display: block;
+  font-size: 3.4rem;
+  line-height: 1.1;
+}
+
+.risk-explanation {
+  color: var(--color-text-muted);
+  font-size: 1.05rem;
+}
+
+.preview .eyebrow {
+  color: #99e3da;
+}
+
+.fix-first {
+  border-left: 6px solid var(--color-accent);
+}
+
+.summary-card {
+  margin: var(--space-5) 0;
+}
+
+.comparison-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 760px) {
+  .hero-panel,
+  .results-hero {
+    grid-template-columns: 1fr;
+    padding: var(--space-5);
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}

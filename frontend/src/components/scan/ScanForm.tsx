@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createGitHubScan, createScan } from '../../api/client';
 import { demoSamples, getDemoSample } from '../../data/demoSamples';
 import type { PastedFile } from '../../types';
+import ErrorState from '../ui/ErrorState';
 import FocusAreaSelector from './FocusAreaSelector';
 import PastedFileEditor from './PastedFileEditor';
 
@@ -252,7 +253,7 @@ export default function ScanForm() {
         </p>
         <p className="helper">PDF export is available from the results page after the review is created.</p>
         <p><button className="btn">Run security review</button></p>
-        {err && <p className="error" role="alert">{err}</p>}
+        {err && <ErrorState>{err}</ErrorState>}
       </section>
     </form>
   );

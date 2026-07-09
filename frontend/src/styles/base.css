@@ -1,0 +1,83 @@
+/* Reset and base element defaults */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-sans);
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+p {
+  margin: 0 0 var(--space-3);
+}
+
+a {
+  color: var(--color-accent);
+}
+
+a:hover {
+  color: var(--color-accent-strong);
+}
+
+ul,
+ol {
+  padding-left: 1.25em;
+}
+
+/* Visible focus states everywhere, including skip link */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Fallback for environments without :focus-visible support */
+button:focus,
+a:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -48px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  color: var(--color-text-on-dark);
+  background: var(--color-panel-dark);
+  border-radius: var(--radius-sm);
+  transition: top 0.1s ease-in-out;
+}
+
+.skip-link:focus {
+  top: 8px;
+}

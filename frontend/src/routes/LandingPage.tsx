@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
+import Card from '../components/ui/Card';
 
 type CardProps = {
   title: string;
   description: string;
 };
 
-function Card({ title, description }: CardProps) {
+function FeatureCard({ title, description }: CardProps) {
   return (
-    <article className="card">
+    <Card as="article">
       <h3>{title}</h3>
       <p>{description}</p>
-    </article>
+    </Card>
   );
 }
 
@@ -62,7 +63,7 @@ function CardGrid({ title, items }: { title: string; items: CardProps[] }) {
       <h2>{title}</h2>
       <div className="grid cards">
         {items.map(item => (
-          <Card key={item.title} {...item} />
+          <FeatureCard key={item.title} {...item} />
         ))}
       </div>
     </section>
@@ -102,7 +103,7 @@ export default function LandingPage() {
       <CardGrid title="Features" items={features} />
       <CardGrid title="How it works" items={workflow} />
 
-      <section className="card trust">
+      <Card as="section" className="trust">
         <h2>Trust and safety</h2>
         <p>
           SecureStack AI treats uploaded files as untrusted, does not execute code,
@@ -117,7 +118,7 @@ export default function LandingPage() {
           {' · '}
           <Link to="/about">About/architecture</Link>
         </p>
-      </section>
+      </Card>
     </main>
   );
 }

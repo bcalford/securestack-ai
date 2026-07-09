@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQueries } from '@tanstack/react-query';
 import { getScan } from '../api/client';
+import ErrorState from '../components/ui/ErrorState';
+import LoadingState from '../components/ui/LoadingState';
 import type { ComparedFinding } from '../utils/scanComparison';
 import { compareScans } from '../utils/scanComparison';
 
@@ -77,12 +79,12 @@ export default function ScanComparePage() {
   ), [leftQuery.data, rightQuery.data]);
 
   if (!leftId || !rightId) {
-    return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><p className="error">Select two completed scans from history to compare.</p><Link className="btn" to="/scans">Back to scan history</Link></main>;
+    return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><ErrorState>Select two completed scans from history to compare.</ErrorState><Link className="btn" to="/scans">Back to scan history</Link></main>;
   }
 
-  if (leftQuery.isLoading || rightQuery.isLoading) return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><p>Loading scan comparison…</p></main>;
+  if (leftQuery.isLoading || rightQuery.isLoading) return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><LoadingState>Loading scan comparison…</LoadingState></main>;
   if (leftQuery.error || rightQuery.error || !leftQuery.data || !rightQuery.data || !comparison) {
-    return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><p className="error">Unable to load both completed scans for comparison.</p><Link className="btn" to="/scans">Back to scan history</Link></main>;
+    return <main className="container"><p className="eyebrow">Regression review</p><h1>Regression review</h1><ErrorState>Unable to load both completed scans for comparison.</ErrorState><Link className="btn" to="/scans">Back to scan history</Link></main>;
   }
 
   return (

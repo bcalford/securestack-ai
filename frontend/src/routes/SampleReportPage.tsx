@@ -4,6 +4,7 @@ import CategoryBreakdown from '../components/dashboard/CategoryBreakdown';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import SeverityChart from '../components/dashboard/SeverityChart';
 import FindingDetails from '../components/findings/FindingDetails';
+import SeverityBadge from '../components/ui/SeverityBadge';
 import { sampleReport } from '../data/sampleReport';
 import { topPriorityFindings } from '../utils/risk';
 
@@ -23,7 +24,7 @@ function ReadOnlyFindings() {
       {sampleReport.findings.map(finding => (
         <article className="card finding-card" key={finding.id}>
           <header>
-            <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
+            <SeverityBadge severity={finding.severity} />
             <span className="badge">{finding.category}</span>
             <span className="badge">Status: {finding.status}</span>
             <h3>{finding.title}</h3>
@@ -83,7 +84,7 @@ export default function SampleReportPage() {
         <h2>Prioritized findings</h2>
         {prioritized.map(finding => (
           <article key={finding.id}>
-            <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
+            <SeverityBadge severity={finding.severity} />
             {' '}<b>{finding.title}</b>
             <p>{finding.recommendation}</p>
           </article>

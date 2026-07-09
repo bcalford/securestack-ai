@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { updateFindingStatus } from '../../api/client';
 import type { Finding } from '../../types';
+import EmptyState from '../ui/EmptyState';
+import ErrorState from '../ui/ErrorState';
+import SeverityBadge from '../ui/SeverityBadge';
 import FindingDetails from './FindingDetails';
 
 type FindingsTableProps = {
@@ -31,20 +34,20 @@ export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
 
   if (!local.length) {
     return (
-      <p className="card empty-state">
+      <EmptyState>
         No findings match the current filters. Clear filters or review the summary if this was a clean scan.
-      </p>
+      </EmptyState>
     );
   }
 
   return (
     <section className="finding-list" aria-label="Finding details">
-      {error && <p role="alert" className="error">{error}</p>}
+      {error && <ErrorState>{error}</ErrorState>}
 
       {local.map(finding => (
         <article className="card finding-card" key={finding.id}>
           <header>
-            <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
+            <SeverityBadge severity={finding.severity} />
             <span className="badge">{finding.category}</span>
             <h3>{finding.title}</h3>
             <p>

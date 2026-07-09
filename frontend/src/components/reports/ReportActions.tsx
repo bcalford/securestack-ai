@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { downloadBundle, downloadJsonReport, downloadSarif, reportUrl } from '../../api/client';
+import ErrorState from '../ui/ErrorState';
 
 export default function ReportActions({ scanId }: { scanId: string }) {
   const [exportError, setExportError] = useState('');
@@ -60,7 +61,7 @@ export default function ReportActions({ scanId }: { scanId: string }) {
         {isDownloadingBundle ? 'Preparing bundle...' : 'Download bundle'}
       </button>{' '}
       <Link className="btn secondary" to="/scans/new">Start another review</Link>
-      {exportError && <p className="error" role="alert">{exportError}</p>}
+      {exportError && <ErrorState>{exportError}</ErrorState>}
     </section>
   );
 }

@@ -3,6 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { listScans } from '../api/client';
 import type { ScanListItem } from '../types';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
+import LoadingState from '../components/ui/LoadingState';
 
 export default function ScanHistoryPage() {
   const { data = [], error, isLoading } = useQuery<ScanListItem[]>({ queryKey: ['scans'], queryFn: listScans });
@@ -23,9 +26,9 @@ export default function ScanHistoryPage() {
     <main className="container">
       <p className="eyebrow">Regression review</p>
       <h1>Previous scans</h1>
-      {isLoading && <p>Loading scan history…</p>}
-      {error && <p className="error">Unable to load scan history.</p>}
-      {!isLoading && !data.length && <p className="card">No scans yet. Start a new security review to populate history.</p>}
+      {isLoading && <LoadingState>Loading scan history…</LoadingState>}
+      {error && <ErrorState>Unable to load scan history.</ErrorState>}
+      {!isLoading && !data.length && <EmptyState>No scans yet. Start a new security review to populate history.</EmptyState>}
       {!!data.length && (
         <section className="card comparison-picker" aria-label="Regression review picker">
           <h2>Regression review</h2>

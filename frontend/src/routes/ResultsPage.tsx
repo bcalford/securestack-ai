@@ -10,6 +10,8 @@ import FindingFilters, { type Filters } from '../components/findings/FindingFilt
 import FindingsTable from '../components/findings/FindingsTable';
 import RemediationStatusSummary from '../components/findings/RemediationStatusSummary';
 import ReportActions from '../components/reports/ReportActions';
+import AlertState from '../components/ui/ErrorState';
+import SeverityBadge from '../components/ui/SeverityBadge';
 import type { ChecklistItem, Finding, FixPlanItem, RiskPath, ThreatModel } from '../types';
 import { buildRiskExplanation, sortFindingsByPriority, topPriorityFindings } from '../utils/risk';
 
@@ -128,7 +130,7 @@ function FixFirstPanel({ findings }: { findings: Finding[] }) {
       <h2>Fix these first</h2>
       {top.length ? top.map(finding => (
         <article key={finding.id}>
-          <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
+          <SeverityBadge severity={finding.severity} />
           {' '}<b>{finding.title}</b>
           <p>
             {finding.fileName}{finding.lineNumber ? `:${finding.lineNumber}` : ''}
@@ -226,7 +228,7 @@ export default function ResultsPage() {
         <h2 id="review-artifacts-heading">Security review artifacts</h2>
         <p className="helper">Concise defensive outputs for planning remediation and verification.</p>
         {reviewArtifacts.isError && (
-          <p className="error" role="alert">Unable to load security review artifacts. Please try again.</p>
+          <AlertState>Unable to load security review artifacts. Please try again.</AlertState>
         )}
         {reviewArtifacts.isLoading && <p className="helper">Loading security review artifacts…</p>}
         {reviewArtifacts.data && (
