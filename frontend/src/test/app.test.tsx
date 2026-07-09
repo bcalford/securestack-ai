@@ -182,6 +182,19 @@ describe('landing page', () => {
       '/scans/new?sample=full-portfolio-demo',
     );
   });
+
+  test('hero includes a tertiary link to the static sample report', () => {
+    renderPath('/');
+
+    expect(screen.getByRole('link', { name: 'View sample report' })).toHaveAttribute('href', '/sample-report');
+  });
+
+  test('landing page explains safety and local-first handling', () => {
+    renderPath('/');
+
+    expect(screen.getByRole('heading', { name: 'Trust and safety' })).toBeInTheDocument();
+    expect(screen.getByText(/treats uploaded files as untrusted, does not execute code/i)).toBeInTheDocument();
+  });
 });
 
 describe('scan form', () => {
@@ -234,7 +247,9 @@ describe('scan form', () => {
 
     expect(screen.getByLabelText('Public GitHub repository URL')).toBeInTheDocument();
     expect(screen.getByText(/Public GitHub repositories only/i)).toBeInTheDocument();
-    expect(screen.getByText(/Analysis runs locally after import/i)).toBeInTheDocument();
+    expect(screen.getByText(/private repositories are not supported/i)).toBeInTheDocument();
+    expect(screen.getByText(/repository is downloaded/i)).toBeInTheDocument();
+    expect(screen.getByText(/analysis runs locally after import/i)).toBeInTheDocument();
     expect(screen.getByText(/No token is needed/i)).toBeInTheDocument();
     expect(screen.getByText(/Uploaded or imported code is not executed/i)).toBeInTheDocument();
   });
@@ -354,10 +369,20 @@ describe('scan form', () => {
 
 
 describe('about and sample report pages', () => {
-  test('about page links to the static sample report', () => {
+  test('about page explains what the app does and its local-first boundary', () => {
+    renderPath('/about');
+
+    expect(screen.getByRole('heading', { name: 'About SecureStack AI' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'What it does' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Local-first security boundary' })).toBeInTheDocument();
+    expect(screen.getByText(/never executed/i)).toBeInTheDocument();
+  });
+
+  test('about page links to the static sample report and rule catalog', () => {
     renderPath('/about');
 
     expect(screen.getByRole('link', { name: /static sample report/i })).toHaveAttribute('href', '/sample-report');
+    expect(screen.getByRole('link', { name: /rule catalog/i })).toHaveAttribute('href', '/rules');
   });
 
   test('sample report renders real report content', () => {
@@ -370,6 +395,17 @@ describe('about and sample report pages', () => {
     expect(screen.getByRole('heading', { name: 'Methodology' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Limitations' })).toBeInTheDocument();
     expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
+  });
+
+  test('sample report clearly flags static sample data and offers the guided sample CTA', () => {
+    renderPath('/sample-report');
+
+    expect(screen.getByText(/Sample data.+not a live scan/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'About this sample report' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Run sample security review' })).toHaveAttribute(
+      'href',
+      '/scans/new?sample=full-portfolio-demo',
+    );
   });
 });
 

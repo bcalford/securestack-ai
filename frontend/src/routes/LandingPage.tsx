@@ -89,6 +89,9 @@ export default function LandingPage() {
               Run sample security review
             </Link>
           </p>
+          <p className="helper">
+            <Link to="/sample-report">View sample report</Link> to see example output before running your own review.
+          </p>
         </div>
 
         <aside className="preview" aria-label="Product preview">
@@ -113,6 +116,8 @@ export default function LandingPage() {
           <Link to="/scans/new">Start review</Link>
           {' · '}
           <Link to="/scans/new?sample=full-portfolio-demo">Sample review</Link>
+          {' · '}
+          <Link to="/sample-report">Sample report</Link>
           {' · '}
           <Link to="/scans">Review history</Link>
           {' · '}

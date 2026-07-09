@@ -46,6 +46,8 @@ export default function SampleReportPage() {
 
   return (
     <main className="container">
+      <p className="badge badge-neutral sample-flag" role="note">Sample data — not a live scan</p>
+
       <section className="results-hero">
         <div>
           <p className="eyebrow">Static sample report</p>
@@ -103,24 +105,28 @@ export default function SampleReportPage() {
         <ReadOnlyFindings />
       </section>
 
-      <section className="card">
-        <h2>Methodology</h2>
-        <p>
-          SecureStack AI validates submitted files, treats all content as untrusted, applies deterministic
-          defensive static-analysis rules, scores risk from severity and confidence, and generates a concise
-          remediation-oriented summary using the configured AI provider.
-        </p>
+      <section className="card about-report">
+        <h2>About this sample report</h2>
+        <div className="grid cards">
+          <div>
+            <h3>Methodology</h3>
+            <p>
+              SecureStack AI validates submitted files, treats all content as untrusted, applies deterministic
+              defensive static-analysis rules, scores risk from severity and confidence, and generates a concise
+              remediation-oriented summary using the configured AI provider.
+            </p>
+          </div>
+          <div>
+            <h3>Limitations</h3>
+            <p>
+              This static report is illustrative only. It does not represent a live scan, execute code, prove exploitability,
+              replace manual review, or guarantee that every vulnerability in a real project would be found.
+            </p>
+          </div>
+        </div>
       </section>
 
-      <section className="card">
-        <h2>Limitations</h2>
-        <p>
-          This static report is illustrative only. It does not represent a live scan, execute code, prove exploitability,
-          replace manual review, or guarantee that every vulnerability in a real project would be found.
-        </p>
-      </section>
-
-      <section className="card">
+      <section className="card cta-banner">
         <h2>Run the guided sample review</h2>
         <p>Use the guided sample to create a fresh local review with the normal scan workflow.</p>
         <Link className="btn" to="/scans/new?sample=full-portfolio-demo">Run sample security review</Link>
