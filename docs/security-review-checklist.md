@@ -1,6 +1,6 @@
 # Security review checklist
 
-SecureStack AI v0.4-alpha generates a checklist for each completed scan to help reviewers track local release-readiness tasks.
+SecureStack AI v0.5.1 generates a checklist for each completed scan to help reviewers track local release-readiness tasks.
 
 ## Access
 

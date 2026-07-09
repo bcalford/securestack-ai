@@ -1,6 +1,21 @@
 # Roadmap
 
-## v0.4-alpha implemented
+SecureStack AI uses semantic version-style release names going forward (`vX.X.X`), with prerelease labels reserved for beta/stabilization milestones when useful.
+
+## v0.5.1 current patch release
+
+- Standardizes current documentation and release references on `v0.5.1` naming.
+- Documents the v0.5 frontend redesign cleanup, refreshed screenshots, README screenshot references, and final UI/documentation polish.
+- Keeps backend behavior, scan logic, API contracts, and deterministic rule behavior unchanged.
+- Validates the repository before the next beta/stabilization phase.
+
+## v0.5.0 frontend redesign prior context
+
+- Introduced the refreshed frontend visual system and reusable UI polish for the local-first review workflow.
+- Improved results, finding detail, scan history, rule catalog, comparison, and report-oriented presentation without changing backend scan behavior.
+- Refreshed frontend documentation and screenshot coverage for the redesign milestone.
+
+## v0.4.0 implemented prior context
 
 - Hardened public GitHub URL import for unauthenticated public repositories, with HTTPS-only URL parsing, archive validation, path traversal protection, generated/vendor skipping, size/count/type limits, local analysis, and no token handling.
 - Expanded deterministic rule coverage for secrets, authentication/session risks, API security, dependency scripts, Dockerfiles, cloud/IaC configuration, logging/data exposure, and input-validation patterns.
@@ -14,7 +29,7 @@
 - Optional manually configured Amazon Bedrock summaries; mock AI remains the default.
 - AWS architecture blueprint and deployment notes documenting future production requirements.
 
-## Known limitations in v0.4-alpha
+## Current limitations
 
 - No authentication or authorization.
 - No public deployment or hosted scanner.
@@ -26,6 +41,17 @@
 - SARIF support is export-only; SARIF import/ingestion is not implemented.
 - No multi-user production storage.
 - No production AWS deployment automation.
+
+## Next planned milestone: v0.8.0-beta
+
+- Stabilization-focused beta milestone using `vX.X.X` naming.
+- Release-readiness cleanup, validation hardening, and documentation review before the stable target.
+- No shared/hosted usage assumptions without first adding explicit authentication, authorization, rate limits, abuse controls, and secure integration designs.
+
+## Stable target: v1.0.0
+
+- Stable local-first defensive review MVP with clear setup, validation, demo, export, architecture, and security-model documentation.
+- Any production, hosted, multi-user, or private-repository capabilities remain future work unless explicitly designed, secured, implemented, and documented in a later release.
 
 ## Future
 

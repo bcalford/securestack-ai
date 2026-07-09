@@ -1,6 +1,6 @@
 # Export bundle
 
-SecureStack AI v0.4-alpha can download a ZIP bundle for a completed local review.
+SecureStack AI v0.5.1 can download a ZIP bundle for a completed local review.
 
 ## Access
 
