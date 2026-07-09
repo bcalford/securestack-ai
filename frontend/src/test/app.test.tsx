@@ -258,7 +258,7 @@ describe('theme', () => {
     renderPath('/');
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
-    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('theme toggle switches to light mode and persists the choice', () => {
@@ -268,7 +268,7 @@ describe('theme', () => {
 
     expect(document.documentElement).toHaveAttribute('data-theme', 'light');
     expect(window.localStorage.getItem('securestack-theme')).toBe('light');
-    expect(screen.getByRole('button', { name: 'Switch to dark theme' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Switch to dark theme' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('explicit user preference overrides the default on remount', () => {
@@ -294,9 +294,9 @@ describe('scan form', () => {
   test('paste mode shows pasted file editor', () => {
     renderPath('/scans/new');
 
-    expect(screen.getByLabelText('File name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Language/type')).toBeInTheDocument();
-    expect(screen.getByLabelText('Paste text')).toBeInTheDocument();
+    expect(screen.getByLabelText('File name for pasted file 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Language/type for pasted file 1')).toBeInTheDocument();
+    expect(screen.getByLabelText('Paste text for pasted file 1')).toBeInTheDocument();
   });
 
   test('upload mode shows upload input and hides pasted file editor', () => {
@@ -305,7 +305,7 @@ describe('scan form', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Upload files' }));
 
     expect(screen.getByLabelText('Upload files or ZIP')).toHaveAttribute('type', 'file');
-    expect(screen.queryByLabelText('Paste text')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Paste text for pasted file 1')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add another pasted file' })).not.toBeInTheDocument();
   });
 
@@ -374,7 +374,7 @@ describe('scan form', () => {
     );
 
     renderPath('/scans/new');
-    fireEvent.change(screen.getByLabelText('Paste text'), { target: { value: 'const ok = true;' } });
+    fireEvent.change(screen.getByLabelText('Paste text for pasted file 1'), { target: { value: 'const ok = true;' } });
     fireEvent.click(screen.getByRole('button', { name: 'Run security review' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/scans', expect.objectContaining({ method: 'POST' })));

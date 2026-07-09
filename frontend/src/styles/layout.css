@@ -108,3 +108,28 @@
     font-size: 0.88rem;
   }
 }
+
+@media (max-width: 430px) {
+  .app-nav-inner {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .app-brand {
+    font-size: 0.95rem;
+  }
+
+  .app-nav-actions {
+    justify-content: space-between;
+  }
+
+  .app-nav-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
+
+  .app-nav-link {
+    width: 100%;
+    text-align: center;
+  }
+}

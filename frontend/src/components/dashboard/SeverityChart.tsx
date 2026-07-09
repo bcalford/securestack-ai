@@ -6,14 +6,18 @@ export default function SeverityChart({ counts }: { counts: Record<string, numbe
   const chart = Object.entries(counts).map(([name, value]) => ({ name, value }));
 
   if (!chart.length) {
-    return <div className="card">No severity data yet.</div>;
+    return <div className="card" role="status">No severity data yet.</div>;
   }
+
+  const summary = chart.map(entry => `${entry.name}: ${entry.value}`).join(', ');
 
   return (
     <div className="card chart-card">
       <h3>Severity breakdown</h3>
+      <p id="severity-chart-summary" className="visually-hidden">Severity breakdown chart summary: {summary}.</p>
       <div className="chart-card-body">
-        <ResponsiveContainer height={170} minWidth={160}>
+        <div className="chart-graphic" role="img" aria-labelledby="severity-chart-summary">
+          <ResponsiveContainer height={170} minWidth={160}>
           <PieChart>
             <Pie data={chart} dataKey="value" nameKey="name" innerRadius={38} outerRadius={72}>
               {chart.map((entry, index) => (
@@ -21,7 +25,8 @@ export default function SeverityChart({ counts }: { counts: Record<string, numbe
               ))}
             </Pie>
           </PieChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
         <ul className="chart-legend" aria-label="Severity counts">
           {chart.map((entry, index) => (
             <li key={entry.name}>

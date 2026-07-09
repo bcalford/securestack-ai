@@ -287,3 +287,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 430px) {
+  .hero-panel,
+  .results-hero {
+    margin: var(--space-4) 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .hero-panel h1 {
+    font-size: clamp(1.75rem, 12vw, 2.25rem);
+  }
+
+  .lede,
+  .risk-explanation {
+    font-size: 1rem;
+  }
+
+  .preview,
+  .score-card {
+    padding: var(--space-4);
+  }
+
+  .score-card strong,
+  .preview-score strong {
+    font-size: 2.25rem;
+  }
+
+  .workflow-steps,
+  .capability-grid,
+  .trust-strip,
+  .comparison-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

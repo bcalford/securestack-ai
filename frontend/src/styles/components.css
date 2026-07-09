@@ -668,3 +668,77 @@ legend {
   border-left: 3px solid var(--color-accent);
   padding-left: var(--space-3);
 }
+
+/* Accessibility and responsive stabilization */
+.pasted-file-stack {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.pasted-file-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+.chart-graphic {
+  min-width: 0;
+}
+
+.export-card-action,
+.export-card-action .btn,
+.report-actions .btn {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .card,
+  .surface,
+  .mode-panel,
+  .export-card,
+  .artifact-card {
+    padding: var(--space-4);
+  }
+
+  .btn,
+  .theme-toggle,
+  .segmented-option {
+    min-height: 44px;
+  }
+
+  .actions,
+  .app-nav-actions,
+  .export-card-action {
+    width: 100%;
+  }
+
+  .actions .btn,
+  .app-nav-actions .btn,
+  .export-card-action .btn,
+  .submit-panel .btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .segmented-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .segmented-option {
+    justify-content: center;
+  }
+
+  .export-grid,
+  .stat-rail,
+  .cards,
+  .artifact-grid,
+  .checklist-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .chart-card-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
