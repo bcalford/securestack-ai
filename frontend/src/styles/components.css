@@ -475,6 +475,48 @@ legend {
   border-radius: var(--radius-md);
 }
 
+
+/* Chart cards */
+.chart-card h3 {
+  margin-top: 0;
+}
+
+.chart-card-body {
+  display: grid;
+  grid-template-columns: minmax(160px, 1fr) minmax(150px, 0.9fr);
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.chart-legend {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+}
+
+.chart-legend li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.chart-legend-swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+@media (max-width: 520px) {
+  .chart-card-body {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Findings */
 .finding-card {
   transition: border-color var(--transition-fast), transform var(--transition-fast);
