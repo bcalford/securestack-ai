@@ -1,7 +1,8 @@
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
+import ProductLogo from '../ui/ProductLogo';
+import ThemeToggle from '../ui/ThemeToggle';
 
 const links = [
-  { to: '/scans/new', label: 'Review' },
   { to: '/scans', label: 'History' },
   { to: '/rules', label: 'Rules' },
   { to: '/sample-report', label: 'Sample Report' },
@@ -17,7 +18,7 @@ export default function NavBar() {
     <nav className="app-nav" aria-label="Primary">
       <div className="app-nav-inner">
         <NavLink to="/" className="app-brand" end>
-          <span className="app-brand-mark" aria-hidden="true">SS</span>
+          <ProductLogo />
           SecureStack AI
         </NavLink>
         <ul className="app-nav-links">
@@ -29,6 +30,10 @@ export default function NavBar() {
             </li>
           ))}
         </ul>
+        <div className="app-nav-actions">
+          <ThemeToggle />
+          <Link className="btn" to="/scans/new">New review</Link>
+        </div>
       </div>
     </nav>
   );

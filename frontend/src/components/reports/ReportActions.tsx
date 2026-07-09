@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { downloadBundle, downloadJsonReport, downloadSarif, reportUrl } from '../../api/client';
 import ErrorState from '../ui/ErrorState';
+import ExportCard from '../ui/ExportCard';
+import SectionHeader from '../ui/SectionHeader';
 
 export default function ReportActions({ scanId }: { scanId: string }) {
   const [exportError, setExportError] = useState('');
@@ -48,39 +50,49 @@ export default function ReportActions({ scanId }: { scanId: string }) {
 
   return (
     <section className="card report-actions" aria-labelledby="export-heading">
-      <h2 id="export-heading">Export report</h2>
-      <p className="helper">Download a local copy of this review in the format you need.</p>
+      <SectionHeader
+        headingId="export-heading"
+        eyebrow="Export center"
+        title="Export report"
+        description="Download a local copy of this review in the format you need."
+      />
 
-      <div className="grid cards">
-        <div className="card subtle export-option">
-          <h3>PDF report</h3>
-          <p className="helper">Score, findings, remediation checklist, methodology, and limitations.</p>
-          <a className="btn" href={reportUrl(scanId)}>Export PDF report</a>
-        </div>
+      <div className="export-grid">
+        <ExportCard
+          title="PDF report"
+          description="Score, findings, remediation checklist, methodology, and limitations."
+          action={<a className="btn" href={reportUrl(scanId)}>Export PDF report</a>}
+        />
 
-        <div className="card subtle export-option">
-          <h3>SARIF</h3>
-          <p className="helper">Hardened SARIF 2.1.0 JSON for import into code scanning tools.</p>
-          <button className="btn secondary" type="button" onClick={handleSarifDownload} disabled={isDownloadingSarif}>
-            {isDownloadingSarif ? 'Preparing SARIF...' : 'Download SARIF'}
-          </button>
-        </div>
+        <ExportCard
+          title="SARIF"
+          description="Hardened SARIF 2.1.0 JSON for import into code scanning tools."
+          action={(
+            <button className="btn secondary" type="button" onClick={handleSarifDownload} disabled={isDownloadingSarif}>
+              {isDownloadingSarif ? 'Preparing SARIF...' : 'Download SARIF'}
+            </button>
+          )}
+        />
 
-        <div className="card subtle export-option">
-          <h3>JSON</h3>
-          <p className="helper">Full structured scan data for local tooling or automation.</p>
-          <button className="btn secondary" type="button" onClick={handleJsonDownload} disabled={isDownloadingJson}>
-            {isDownloadingJson ? 'Preparing JSON...' : 'Download JSON'}
-          </button>
-        </div>
+        <ExportCard
+          title="JSON"
+          description="Full structured scan data for local tooling or automation."
+          action={(
+            <button className="btn secondary" type="button" onClick={handleJsonDownload} disabled={isDownloadingJson}>
+              {isDownloadingJson ? 'Preparing JSON...' : 'Download JSON'}
+            </button>
+          )}
+        />
 
-        <div className="card subtle export-option">
-          <h3>Bundle</h3>
-          <p className="helper">ZIP containing the generated reports for handoff or archival.</p>
-          <button className="btn secondary" type="button" onClick={handleBundleDownload} disabled={isDownloadingBundle}>
-            {isDownloadingBundle ? 'Preparing bundle...' : 'Download bundle'}
-          </button>
-        </div>
+        <ExportCard
+          title="Bundle"
+          description="ZIP containing the generated reports for handoff or archival."
+          action={(
+            <button className="btn secondary" type="button" onClick={handleBundleDownload} disabled={isDownloadingBundle}>
+              {isDownloadingBundle ? 'Preparing bundle...' : 'Download bundle'}
+            </button>
+          )}
+        />
       </div>
 
       <p className="actions">

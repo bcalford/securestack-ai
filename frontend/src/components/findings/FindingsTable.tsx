@@ -3,6 +3,7 @@ import { updateFindingStatus } from '../../api/client';
 import type { ControlMapping, Finding } from '../../types';
 import EmptyState from '../ui/EmptyState';
 import ErrorState from '../ui/ErrorState';
+import FindingCard from '../ui/FindingCard';
 import SeverityBadge from '../ui/SeverityBadge';
 import StatusBadge from '../ui/StatusBadge';
 import FindingDetails from './FindingDetails';
@@ -47,18 +48,20 @@ export default function FindingsTable({ scanId, rows, controlMappingsByRuleId = 
       {error && <ErrorState>{error}</ErrorState>}
 
       {local.map(finding => (
-        <article className="card finding-card" id={`finding-${finding.id}`} key={finding.id}>
-          <header>
-            <SeverityBadge severity={finding.severity} />
-            <span className="badge">{finding.category}</span>
-            <StatusBadge label={`Confidence: ${finding.confidence}`} />
-            <StatusBadge label={`Status: ${finding.status}`} />
-            <h3>{finding.title}</h3>
-            <p>
-              {finding.fileName}{finding.lineNumber ? `:${finding.lineNumber}` : ''}
-            </p>
-          </header>
-
+        <FindingCard
+          key={finding.id}
+          id={`finding-${finding.id}`}
+          title={finding.title}
+          meta={`${finding.fileName}${finding.lineNumber ? `:${finding.lineNumber}` : ''}`}
+          badges={(
+            <>
+              <SeverityBadge severity={finding.severity} />
+              <span className="badge">{finding.category}</span>
+              <StatusBadge label={`Confidence: ${finding.confidence}`} />
+              <StatusBadge label={`Status: ${finding.status}`} />
+            </>
+          )}
+        >
           <FindingDetails finding={finding} controlMappings={controlMappingsByRuleId[finding.ruleId]} />
 
           <label>
@@ -76,7 +79,7 @@ export default function FindingsTable({ scanId, rows, controlMappingsByRuleId = 
           </label>
 
           <p className="rule-id">Rule ID: {finding.ruleId}</p>
-        </article>
+        </FindingCard>
       ))}
     </section>
   );

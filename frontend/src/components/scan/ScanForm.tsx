@@ -4,6 +4,7 @@ import { createGitHubScan, createScan } from '../../api/client';
 import { demoSamples, getDemoSample } from '../../data/demoSamples';
 import type { PastedFile } from '../../types';
 import ErrorState from '../ui/ErrorState';
+import Tabs from '../ui/Tabs';
 import FocusAreaSelector from './FocusAreaSelector';
 import PastedFileEditor from './PastedFileEditor';
 
@@ -141,20 +142,17 @@ export default function ScanForm() {
           Choose pasted source, local uploads, safe demo samples, or a public GitHub repository URL. Demo fixtures are intentionally vulnerable and use fake secrets only.
         </p>
 
-        <div className="tab-row" aria-label="File input mode">
-          <button type="button" aria-pressed={mode === 'paste'} className={`btn ${mode === 'paste' ? '' : 'secondary'}`} onClick={() => switchMode('paste')}>
-            Paste files
-          </button>
-          <button type="button" aria-pressed={mode === 'upload'} className={`btn ${mode === 'upload' ? '' : 'secondary'}`} onClick={() => switchMode('upload')}>
-            Upload files
-          </button>
-          <button type="button" aria-pressed={mode === 'sample'} className={`btn ${mode === 'sample' ? '' : 'secondary'}`} onClick={() => switchMode('sample')}>
-            Use sample
-          </button>
-          <button type="button" aria-pressed={mode === 'github'} className={`btn ${mode === 'github' ? '' : 'secondary'}`} onClick={() => switchMode('github')}>
-            GitHub URL
-          </button>
-        </div>
+        <Tabs
+          ariaLabel="File input mode"
+          value={mode}
+          onChange={switchMode}
+          options={[
+            { value: 'paste', label: 'Paste files' },
+            { value: 'upload', label: 'Upload files' },
+            { value: 'sample', label: 'Use sample' },
+            { value: 'github', label: 'GitHub URL' },
+          ]}
+        />
 
         {mode === 'sample' && (
           <div className="mode-panel">
@@ -245,14 +243,14 @@ export default function ScanForm() {
         <p className="card subtle">Mock AI is used by default. Bedrock summaries appear only when the backend is manually started with AI_PROVIDER=bedrock.</p>
       </section>
 
-      <section className="card">
+      <section className="card submit-panel">
         <h2>Step 4: Run review</h2>
         <p>
           <b>Submitting:</b> {mode === 'github' ? (githubUrl.trim() ? 'GitHub repository URL' : 'waiting for a GitHub URL') : `${validFiles.length} pasted/sample file(s)`}
           {mode === 'upload' ? ' plus selected uploads' : ''} · {mode === 'sample' ? sample.name : mode === 'github' ? 'public repository import' : 'manual input'} · {depth} depth.
         </p>
         <p className="helper">PDF export is available from the results page after the review is created.</p>
-        <p><button className="btn">Run security review</button></p>
+        <p><button className="btn btn-lg">Run security review</button></p>
         {err && <ErrorState>{err}</ErrorState>}
       </section>
     </form>

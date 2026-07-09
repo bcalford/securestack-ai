@@ -3,21 +3,37 @@
 .hero-panel,
 .results-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 0.8fr);
-  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+  gap: var(--space-6);
   align-items: center;
   margin: var(--space-5) 0;
   padding: var(--space-6);
-  background: var(--color-surface);
+  background: linear-gradient(160deg, var(--color-surface-elevated), var(--color-surface));
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glow);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-panel::before,
+.results-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(480px 260px at 100% 0%, var(--color-accent-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-panel > *,
+.results-hero > * {
+  position: relative;
 }
 
 .hero-panel h1 {
   margin: 0;
-  font-size: clamp(1.9rem, 3.4vw, 3rem);
-  line-height: 1.1;
+  font-size: clamp(2rem, 3.6vw, 3.1rem);
+  line-height: 1.08;
 }
 
 .lede {
@@ -25,13 +41,15 @@
   font-size: 1.15rem;
 }
 
+/* Product preview panel (landing hero aside) */
 .preview,
 .score-card {
   padding: var(--space-5);
-  color: var(--color-text-on-dark);
-  background: var(--color-panel-dark);
+  color: var(--color-panel-dark-text);
+  background: linear-gradient(165deg, var(--color-panel-dark), color-mix(in srgb, var(--color-panel-dark) 80%, var(--color-accent) 6%));
   border: 1px solid var(--color-panel-dark-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .score-card {
@@ -42,6 +60,10 @@
   display: block;
   font-size: 3.4rem;
   line-height: 1.1;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .risk-explanation {
@@ -50,11 +72,153 @@
 }
 
 .preview .eyebrow {
+  color: var(--color-accent);
+}
+
+.preview-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-panel-dark-border);
+}
+
+.preview-score strong {
+  font-size: 2.4rem;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.preview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: var(--space-3) 0;
+}
+
+.preview-chip {
+  padding: 4px 10px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-panel-dark-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.preview-list {
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: var(--color-text-on-dark);
+}
+
+.preview-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.preview-list li::before {
+  content: '✓';
+  color: var(--color-accent);
+  font-weight: 800;
+}
+
+/* Workflow steps */
+.workflow-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  counter-reset: workflow-step;
+}
+
+.workflow-step {
+  position: relative;
+  padding: var(--space-5) var(--space-4) var(--space-4);
+}
+
+.workflow-step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: var(--space-3);
+  font-weight: 800;
+  color: var(--color-accent-contrast);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+  border-radius: var(--radius-pill);
+}
+
+.workflow-step h3 {
+  margin: 0 0 var(--space-1);
+}
+
+/* Capability grid */
+.capability-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space-3);
+}
+
+.capability-card {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.capability-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.capability-card h3 {
+  margin: 0 0 var(--space-1);
+  font-size: 1rem;
+}
+
+/* Trust / safety strip */
+.trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.trust-strip-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.trust-strip-item strong {
+  color: var(--color-text);
+}
+
+.trust-strip-icon {
+  color: var(--color-accent);
+  font-weight: 800;
+}
+
+.preview .eyebrow {
   color: #99e3da;
 }
 
 .fix-first {
-  border-left: 6px solid var(--color-accent);
+  border-left: 3px solid var(--color-accent);
+  background: linear-gradient(120deg, var(--color-accent-soft), var(--color-surface) 40%);
 }
 
 .sample-flag {
@@ -64,13 +228,31 @@
   letter-spacing: 0.04em;
 }
 
+/* Sample report hero: same family as the live results hero, but a violet
+   accent and a dashed border signal that this is a static preview. */
+.sample-report-hero {
+  border: 1px dashed var(--color-border-strong);
+  box-shadow: var(--shadow-glow-secondary);
+}
+
+.sample-report-hero::before {
+  background: radial-gradient(480px 260px at 100% 0%, var(--color-secondary-soft), transparent 70%);
+}
+
+.sample-report-hero .score-card strong {
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .about-report h3 {
   margin-top: 0;
 }
 
 .cta-banner {
   text-align: center;
-  background: var(--color-accent-soft);
+  background: linear-gradient(135deg, var(--color-accent-soft), var(--color-secondary-soft));
   border-color: var(--color-accent);
 }
 

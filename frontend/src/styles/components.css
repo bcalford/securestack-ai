@@ -1,5 +1,58 @@
 /* Reusable component-level styles shared across pages */
 
+/* Brand / product logo */
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 800;
+  font-size: 1.02rem;
+  color: var(--color-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.app-brand:hover {
+  color: var(--color-text);
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* Theme toggle */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 12px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+.theme-toggle-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
 /* Page header */
 .page-header {
   margin-bottom: var(--space-5);
@@ -7,6 +60,52 @@
 
 .page-header h1 {
   margin: var(--space-1) 0 var(--space-2);
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem);
+}
+
+/* Section header (in-page, smaller than PageHeader) */
+.section-header {
+  margin-bottom: var(--space-4);
+}
+
+.section-header h2 {
+  margin: var(--space-1) 0 var(--space-1);
+}
+
+/* Surfaces: layered panels distinct from the flatter .card */
+.surface {
+  padding: var(--space-5);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.surface-elevated {
+  box-shadow: var(--shadow-md);
+}
+
+.surface-sunken {
+  background: var(--color-surface-muted);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.surface-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Rule catalog card header (title block left, severity badge right) */
+.finding-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+
+.finding-head h2 {
+  margin: var(--space-1) 0 0;
+  font-size: 1.1rem;
 }
 
 /* Scan history rows */
@@ -22,28 +121,60 @@
   margin: 0;
 }
 
-/* Export options */
-.export-option {
+/* Export center */
+.export-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+}
+
+.export-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
 }
 
-.export-option h3 {
+.export-card:hover {
+  border-color: var(--color-border-strong);
+  transform: translateY(-2px);
+}
+
+.export-card h3 {
   margin: 0;
+  font-size: 1rem;
 }
 
-/* Metric card */
+.export-card-action {
+  margin-top: auto;
+  padding-top: var(--space-1);
+}
+
+/* Metric / stat rail */
+.stat-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+
 .metric-card h3 {
   margin: 0 0 var(--space-1);
-  font-size: 0.95rem;
-  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-subtle);
 }
 
 .metric-value {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--color-text);
 }
@@ -56,6 +187,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast);
 }
 
 .card.subtle {
@@ -63,55 +195,108 @@
   box-shadow: none;
 }
 
+.metric-card,
+.stat-rail .card {
+  background: var(--color-surface-elevated);
+}
+
 /* Buttons and links styled as buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 11px 18px;
-  color: white;
+  padding: 11px 20px;
+  color: var(--color-accent-contrast);
   font-weight: 700;
   font-size: 0.95rem;
   text-decoration: none;
   cursor: pointer;
-  background: var(--color-accent);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
   border: 0;
   border-radius: var(--radius-sm);
-  transition: background-color 0.12s ease-in-out;
+  box-shadow: 0 8px 20px -10px var(--color-accent-glow);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
 }
 
 .btn:hover {
-  background: var(--color-accent-strong);
-  color: white;
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  color: var(--color-accent-contrast);
 }
 
 .btn.secondary {
   color: var(--color-text);
   background: var(--color-surface-muted);
   border: 1px solid var(--color-border-strong);
+  box-shadow: none;
 }
 
 .btn.secondary:hover {
-  background: #e7edf3;
   color: var(--color-text);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-accent);
+  filter: none;
+  transform: translateY(-1px);
 }
 
 .btn:disabled,
 .btn[aria-disabled='true'] {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.5;
+  transform: none;
 }
 
 .btn.disabled {
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
-.actions,
-.tab-row {
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 1.02rem;
+}
+
+.submit-panel {
+  background: linear-gradient(135deg, var(--color-accent-soft), var(--color-surface) 55%);
+  border-color: var(--color-accent);
+}
+
+.actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
+}
+
+/* Segmented control (mode selector tabs) */
+.segmented-control {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.segmented-option {
+  padding: 9px 16px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.segmented-option:hover {
+  color: var(--color-text);
+}
+
+.segmented-option.active {
+  color: var(--color-accent-contrast);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
 }
 
 /* Forms */
@@ -123,9 +308,16 @@ select {
   padding: 10px 12px;
   font-family: inherit;
   color: var(--color-text);
-  background: var(--color-surface);
+  background: var(--color-surface-muted);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast);
+}
+
+.input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-accent);
 }
 
 label {
@@ -154,7 +346,11 @@ legend {
 }
 
 .mode-panel {
-  margin: var(--space-3) 0;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
 }
 
 .helper {
@@ -163,10 +359,10 @@ legend {
 }
 
 .eyebrow {
-  color: var(--color-text-subtle);
-  font-size: 0.78rem;
+  color: var(--color-accent);
+  font-size: 0.76rem;
   font-weight: 800;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -182,6 +378,8 @@ legend {
 .empty-state {
   color: var(--color-text-muted);
   background: var(--color-surface-muted);
+  text-align: center;
+  padding: var(--space-6) var(--space-5);
 }
 
 .loading-state ol {
@@ -189,16 +387,18 @@ legend {
   color: var(--color-text-muted);
 }
 
-/* Badges (severity always renders visible text, never color-only) */
+/* Badges/chips (severity always renders visible text, never color-only) */
 .badge {
   display: inline-flex;
   align-items: center;
   margin: var(--space-1);
-  padding: 4px 10px;
+  padding: 4px 11px;
   color: var(--color-accent-strong);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
   background: var(--color-accent-soft);
+  border: 1px solid transparent;
   border-radius: var(--radius-pill);
 }
 
@@ -269,14 +469,42 @@ legend {
 .markdown-summary pre {
   padding: var(--space-3);
   overflow: auto;
-  color: var(--color-text-on-dark);
+  color: var(--color-panel-dark-text);
   background: var(--color-panel-dark);
+  border: 1px solid var(--color-panel-dark-border);
   border-radius: var(--radius-md);
 }
 
 /* Findings */
-.finding-card header h3 {
-  margin: 0.4rem 0;
+.finding-card {
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.finding-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.finding-card-header {
+  margin-bottom: var(--space-2);
+}
+
+.finding-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0 0 var(--space-2) calc(var(--space-1) * -1);
+}
+
+.finding-card header h3,
+.finding-card-header h3 {
+  margin: 0.3rem 0;
+}
+
+.finding-card-meta {
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
 }
 
 .finding-details {
@@ -295,6 +523,10 @@ legend {
 
 .finding-detail-row dt {
   font-weight: 800;
+  color: var(--color-text-subtle);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .finding-detail-row dd {
@@ -304,7 +536,7 @@ legend {
 .rule-id {
   color: var(--color-text-subtle);
   font-family: var(--font-mono);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
 }
 
 /* Review/security artifact accordions */
@@ -351,8 +583,9 @@ legend {
 .delta-list li {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: var(--space-4);
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -374,6 +607,14 @@ legend {
 .comparison-list,
 .remediation-status {
   margin-bottom: var(--space-4);
+}
+
+.history-row {
+  transition: border-color var(--transition-fast);
+}
+
+.history-row:hover {
+  border-color: var(--color-border-strong);
 }
 
 .history-row label,

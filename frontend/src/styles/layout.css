@@ -23,44 +23,21 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid var(--color-border);
 }
 
 .app-nav-inner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
   max-width: var(--content-max-width);
   padding: var(--space-3) var(--space-5);
   margin: 0 auto;
-}
-
-.app-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 800;
-  color: var(--color-text);
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.app-brand:hover {
-  color: var(--color-text);
-}
-
-.app-brand-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  color: white;
-  font-size: 0.85rem;
-  font-weight: 800;
-  background: var(--color-accent);
-  border-radius: var(--radius-sm);
 }
 
 .app-nav-links {
@@ -69,17 +46,20 @@
   gap: var(--space-1);
   align-items: center;
   list-style: none;
-  margin: 0;
+  margin: 0 auto 0 0;
   padding: 0;
 }
 
 .app-nav-link {
   display: inline-block;
+  position: relative;
   padding: var(--space-2) var(--space-3);
   color: var(--color-text-muted);
   font-weight: 600;
+  font-size: 0.92rem;
   text-decoration: none;
   border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .app-nav-link:hover {
@@ -88,23 +68,25 @@
 }
 
 .app-nav-link[aria-current='page'] {
-  color: var(--color-accent-strong);
+  color: var(--color-accent);
   background: var(--color-accent-soft);
 }
 
-.app-nav-toggle {
-  display: none;
+.app-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 @media (max-width: 760px) {
   .app-nav-inner {
-    flex-wrap: wrap;
     gap: var(--space-2);
   }
 
   .app-nav-links {
     justify-content: flex-start;
     width: 100%;
+    order: 3;
   }
 
   .app-nav-link {
@@ -123,6 +105,6 @@
 
   .app-nav-link {
     padding: var(--space-1) var(--space-2);
-    font-size: 0.92rem;
+    font-size: 0.88rem;
   }
 }

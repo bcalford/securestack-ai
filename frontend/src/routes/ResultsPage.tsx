@@ -12,7 +12,9 @@ import RemediationStatusSummary from '../components/findings/RemediationStatusSu
 import ReportActions from '../components/reports/ReportActions';
 import AlertState from '../components/ui/ErrorState';
 import InlineLoadingState from '../components/ui/LoadingState';
+import SectionHeader from '../components/ui/SectionHeader';
 import SeverityBadge from '../components/ui/SeverityBadge';
+import StatRail from '../components/ui/StatRail';
 import StatusBadge from '../components/ui/StatusBadge';
 import type { ChecklistItem, ControlMapping, Finding, FixPlanItem, RiskPath, ThreatModel } from '../types';
 import { buildRiskExplanation, sortFindingsByPriority, topPriorityFindings } from '../utils/risk';
@@ -237,11 +239,11 @@ export default function ResultsPage() {
 
       <section aria-labelledby="summary-cards-heading">
         <h2 id="summary-cards-heading" className="visually-hidden">Summary at a glance</h2>
-        <div className="grid cards">
+        <StatRail ariaLabel="Summary at a glance">
           <RiskSummaryCards scan={data} />
           <SeverityChart counts={data.severityCounts} />
           <CategoryBreakdown counts={data.categoryCounts} />
-        </div>
+        </StatRail>
       </section>
 
       <FixFirstPanel findings={data.findings} />
@@ -257,9 +259,12 @@ export default function ResultsPage() {
       </section>
 
       <section className="card review-artifacts" aria-labelledby="review-artifacts-heading">
-        <p className="eyebrow">Backend-generated review artifacts</p>
-        <h2 id="review-artifacts-heading">Security review artifacts</h2>
-        <p className="helper">Concise defensive outputs for planning remediation and verification.</p>
+        <SectionHeader
+          headingId="review-artifacts-heading"
+          eyebrow="Backend-generated review artifacts"
+          title="Security review artifacts"
+          description="Concise defensive outputs for planning remediation and verification."
+        />
         {reviewArtifacts.isError && (
           <AlertState>Unable to load security review artifacts. Please try again.</AlertState>
         )}
@@ -286,8 +291,8 @@ export default function ResultsPage() {
 
       <ReportActions scanId={data.id} />
 
-      <section>
-        <h2>Findings</h2>
+      <section aria-labelledby="findings-heading">
+        <SectionHeader headingId="findings-heading" eyebrow="Prioritized results" title="Findings" />
         <FindingFilters filters={filters} setFilters={setFilters} categories={Object.keys(data.categoryCounts)} />
         <p className="helper">Showing {rows.length} of {data.findingCount} finding(s).</p>
         <FindingsTable scanId={data.id} rows={rows} controlMappingsByRuleId={controlMappingsByRuleId} />

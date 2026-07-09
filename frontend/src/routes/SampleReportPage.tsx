@@ -48,7 +48,7 @@ export default function SampleReportPage() {
     <main className="container">
       <p className="badge badge-neutral sample-flag" role="note">Sample data — not a live scan</p>
 
-      <section className="results-hero">
+      <section className="results-hero sample-report-hero">
         <div>
           <p className="eyebrow">Static sample report</p>
           <h1>{sampleReport.name}</h1>

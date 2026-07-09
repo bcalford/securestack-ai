@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
+import { ThemeProvider } from '../theme/ThemeContext';
 import type { Finding, FixPlan, RiskPathResponse, RuleCatalogItem, Scan, SecurityChecklist, ThreatModel } from '../types';
 import { topPriorityFindings } from '../utils/risk';
 import { compareScans } from '../utils/scanComparison';
@@ -150,11 +151,13 @@ function renderPath(path = '/') {
   });
 
   return render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
-        <App />
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 
@@ -186,6 +189,8 @@ function mockResultsFetchWithEndpoint(endpoint: string, body: unknown, status = 
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  window.localStorage.clear();
+  document.documentElement.removeAttribute('data-theme');
 });
 
 describe('landing page', () => {
@@ -211,6 +216,66 @@ describe('landing page', () => {
 
     expect(screen.getByRole('heading', { name: 'Trust and safety' })).toBeInTheDocument();
     expect(screen.getByText(/treats uploaded files as untrusted, does not execute code/i)).toBeInTheDocument();
+  });
+
+  test('landing page shows a product preview panel with mock score, findings, and exports', () => {
+    renderPath('/');
+
+    expect(screen.getByLabelText('Product preview')).toBeInTheDocument();
+    expect(screen.getByText('CRITICAL · Hardcoded credential')).toBeInTheDocument();
+    expect(screen.getByLabelText('Export formats')).toBeInTheDocument();
+    expect(screen.getByText('Uploaded code is never executed')).toBeInTheDocument();
+  });
+
+  test('landing page workflow and capability grid cover the required items', () => {
+    renderPath('/');
+
+    expect(screen.getByText('Add files')).toBeInTheDocument();
+    expect(screen.getByText('Analyze locally')).toBeInTheDocument();
+    expect(screen.getByText('Review risk')).toBeInTheDocument();
+    expect(screen.getByText('Generate report/artifacts')).toBeInTheDocument();
+
+    expect(screen.getByText('Static analysis rules')).toBeInTheDocument();
+    expect(screen.getByText('Public GitHub URL import')).toBeInTheDocument();
+    expect(screen.getByText('Threat model')).toBeInTheDocument();
+    expect(screen.getByText('Risk paths')).toBeInTheDocument();
+    expect(screen.getByText('Fix plan')).toBeInTheDocument();
+    expect(screen.getByText('Security checklist')).toBeInTheDocument();
+    expect(screen.getByText('PDF / SARIF / JSON / bundle exports')).toBeInTheDocument();
+    expect(screen.getByText('Scan comparison')).toBeInTheDocument();
+  });
+
+  test('landing page contains no placeholder text', () => {
+    renderPath('/');
+
+    expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lorem ipsum/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('theme', () => {
+  test('defaults to dark theme on first load', () => {
+    renderPath('/');
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toBeInTheDocument();
+  });
+
+  test('theme toggle switches to light mode and persists the choice', () => {
+    renderPath('/');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light theme' }));
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(window.localStorage.getItem('securestack-theme')).toBe('light');
+    expect(screen.getByRole('button', { name: 'Switch to dark theme' })).toBeInTheDocument();
+  });
+
+  test('explicit user preference overrides the default on remount', () => {
+    window.localStorage.setItem('securestack-theme', 'light');
+    renderPath('/');
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
   });
 });
 
