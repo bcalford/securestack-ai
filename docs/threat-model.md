@@ -1,6 +1,6 @@
 # Threat model artifact
 
-SecureStack AI v0.5.1 generates a defensive threat model artifact for each completed scan.
+SecureStack AI v0.8.0-beta generates a defensive threat model artifact for each completed scan.
 
 ## Access
 

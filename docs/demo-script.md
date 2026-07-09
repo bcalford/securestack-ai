@@ -1,5 +1,7 @@
 # Demo Walkthrough
 
+SecureStack AI current beta: `v0.8.0-beta`.
+
 Use this 5 to 7 minute walkthrough to evaluate SecureStack AI as a local-first defensive security review application.
 
 ## 0:00-0:45 — Open the README

@@ -1,13 +1,22 @@
 # Roadmap
 
-SecureStack AI uses semantic version-style release names going forward (`vX.X.X`), with prerelease labels reserved for beta/stabilization milestones when useful.
+SecureStack AI uses semantic version-style release names (`vX.X.X`), with prerelease labels reserved for beta/stabilization milestones when useful.
 
-## v0.5.1 current patch release
+## v0.8.0-beta current beta release
 
-- Standardizes current documentation and release references on `v0.5.1` naming.
-- Documents the v0.5 frontend redesign cleanup, refreshed screenshots, README screenshot references, and final UI/documentation polish.
-- Keeps backend behavior, scan logic, API contracts, and deterministic rule behavior unchanged.
-- Validates the repository before the next beta/stabilization phase.
+- Stabilizes the local-first defensive security review MVP for beta evaluation without adding major product features.
+- Validates clean-machine setup, local Docker Compose startup, frontend/backend build expectations, and CI-aligned validation paths.
+- Polishes accessibility and responsive presentation for the guided review, results, finding details, export, rule catalog, scan history, and comparison flows.
+- Fixes beta edge cases found during stabilization while keeping backend scan behavior, API contracts, and deterministic rule intent stable.
+- Updates release documentation, demo walkthroughs, troubleshooting, limitations, and validation guidance for `v0.8.0-beta`.
+- Keeps mock AI as the default, uploaded code unexecuted, raw file storage disabled by default, and SARIF support export-only.
+
+## v0.5.1 prior UI/docs polish release
+
+- Standardized documentation and release references on `v0.5.1` naming after the frontend redesign.
+- Documented the v0.5 frontend redesign cleanup, refreshed screenshots, README screenshot references, and UI/documentation polish.
+- Kept backend behavior, scan logic, API contracts, and deterministic rule behavior unchanged.
+- Validated the repository before the beta/stabilization phase.
 
 ## v0.5.0 frontend redesign prior context
 
@@ -42,21 +51,16 @@ SecureStack AI uses semantic version-style release names going forward (`vX.X.X`
 - No multi-user production storage.
 - No production AWS deployment automation.
 
-## Next planned milestone: v0.8.0-beta
+## Next stable target: v1.0.0
 
-- Stabilization-focused beta milestone using `vX.X.X` naming.
-- Release-readiness cleanup, validation hardening, and documentation review before the stable target.
-- No shared/hosted usage assumptions without first adding explicit authentication, authorization, rate limits, abuse controls, and secure integration designs.
+- Stable local-first defensive review MVP with clear setup, validation, guided demo, export, architecture, and security-model documentation.
+- Release-readiness cleanup focused on reliability, documentation accuracy, test coverage, and conservative dependency/build hygiene.
+- No shared/hosted usage assumptions without first adding explicit authentication, authorization, rate limits, abuse controls, storage boundaries, and secure integration designs.
 
-## Stable target: v1.0.0
-
-- Stable local-first defensive review MVP with clear setup, validation, demo, export, architecture, and security-model documentation.
-- Any production, hosted, multi-user, or private-repository capabilities remain future work unless explicitly designed, secured, implemented, and documented in a later release.
-
-## Future
+## Future after v1.0.0
 
 - Authentication and authorization before any shared or hosted use.
-- Private repository import through an explicit, secure integration design.
+- Private repository import only through an explicit, secure integration design.
 - GitHub code scanning upload/automation only after an explicit integration design and additional safety review.
 - Optional AI provider expansion behind explicit configuration and secret-safe defaults.
 - Semgrep execution and SARIF ingestion/import as separate future capabilities.

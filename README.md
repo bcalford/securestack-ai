@@ -2,6 +2,10 @@
 
 SecureStack AI v0.8.0-beta is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and local report exports.
 
+## Current beta
+
+Current version: `v0.8.0-beta`. This beta focuses on stabilization, clean-machine validation, accessibility/responsive polish, edge-case fixes, demo walkthrough polish, dependency/build hygiene, and documentation consistency. It is suitable for local evaluation and portfolio demonstration, but it is not production-ready and is not a hosted scanner.
+
 ## Features
 
 - Guided scan creation from pasted files, uploaded files/ZIP archives, built-in safe demo samples, or public GitHub repository URLs imported for local analysis of public-only repositories.
@@ -206,6 +210,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`docs/v0.3-release-notes.md`](docs/v0.3-release-notes.md)
 - [`docs/v0.4-release-notes.md`](docs/v0.4-release-notes.md)
 - [`docs/v0.5.1-release-notes.md`](docs/v0.5.1-release-notes.md)
+- [`docs/v0.8.0-beta-release-notes.md`](docs/v0.8.0-beta-release-notes.md)
 
 ### Security review artifacts
 

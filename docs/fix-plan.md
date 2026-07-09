@@ -1,6 +1,6 @@
 # Fix plan artifact
 
-SecureStack AI v0.5.1 generates a deterministic fix plan for each completed scan.
+SecureStack AI v0.8.0-beta generates a deterministic fix plan for each completed scan.
 
 ## Access
 

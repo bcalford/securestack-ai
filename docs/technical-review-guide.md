@@ -1,5 +1,7 @@
 # Technical Review Guide
 
+SecureStack AI current beta: `v0.8.0-beta`.
+
 Use this guide to review the application behavior and code structure quickly.
 
 ## Fast path
