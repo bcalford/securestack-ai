@@ -18,11 +18,11 @@ In Docker, nginx serves the frontend and proxies `/api` to the `backend` service
 
 ## Local validation script failures
 
-Run `./scripts/validate-all.sh` or `make validate` from any directory inside the repository; the script changes to the repository root before running checks. Use `./scripts/validate-all.sh --quick` or `make validate-quick` for a faster loop that skips backend packaging and frontend production build. Use `./scripts/validate-all.sh --skip-package` to skip only backend packaging, `./scripts/validate-all.sh --clean-frontend-install` to remove `frontend/node_modules` and run a fresh `npm ci`, and `./scripts/validate-all.sh --skip-docker` if Docker is unavailable. Report Docker limitations separately instead of treating skipped Docker checks as passing.
+Run `./scripts/validate-all.sh` or `make validate` from the repository, or run `./scripts/validate-all.sh` from any subdirectory inside the repository; the script changes to the repository root before running checks. Use `./scripts/validate-all.sh --quick` or `make validate-quick` for a faster loop that skips backend packaging and frontend production build. Use `./scripts/validate-all.sh --skip-package` to skip only backend packaging, `./scripts/validate-all.sh --clean-frontend-install` to remove `frontend/node_modules` and run a fresh `npm ci`, and `./scripts/validate-all.sh --skip-docker` if Docker is unavailable. Report Docker limitations separately instead of treating skipped Docker checks as passing.
 
 ## Duplicate-file guard failures
 
-`./scripts/check-duplicates.sh` reports common accidental duplicate/copy artifacts such as `2.java`, `3.tsx`, `copy.*`, `*.orig`, and `*.rej`. The guard only detects and prints matching paths; it does not delete files automatically and does not claim to know the root cause. Review each reported file and remove or rename it intentionally before rerunning validation.
+`./scripts/check-duplicates.sh` reports common accidental duplicate/copy artifacts such as `ApiController 2.java`, `SarifService 3.java`, `main 2.css`, `component copy.tsx`, `*.orig`, and `*.rej`, while skipping `.git`, `node_modules`, `frontend/dist`, and `backend/target`. The guard only detects and prints matching paths; it does not delete files automatically and does not claim to know the root cause. Review each reported file and remove or rename it intentionally before rerunning validation.
 
 ## Secret-safety guard failures
 

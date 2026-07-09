@@ -2,6 +2,19 @@
 
 Use these commands to verify the local application before sharing changes. The preferred path is the one-command validation script or matching Make targets.
 
+## Clean-machine evaluator path
+
+From a new checkout, run the same deterministic validation path before starting the app:
+
+```bash
+git clone https://github.com/bcalford/securestack-ai.git
+cd securestack-ai
+./scripts/validate-all.sh
+docker compose up --build
+```
+
+Open `http://localhost:5173` after Docker Compose finishes building. `./scripts/validate-all.sh` can be launched from any directory inside the repository; it resolves and changes to the repository root before running checks.
+
 ## One-command validation
 
 ```bash
@@ -31,9 +44,9 @@ make check-duplicates
 make check-secrets
 ```
 
-`check-duplicates.sh` detects common accidental duplicate/copy artifacts including `ApiController 2.java`, `main 2.css`, `package 2.json`, `README 2.md`, `SarifService 3.java`, `client 3.ts`, `component 3.tsx`, `component copy.tsx`, `component Copy.tsx`, `*.orig`, and `*.rej`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
+`check-duplicates.sh` detects common accidental duplicate/copy artifacts including `ApiController 2.java`, `main 2.css`, `package 2.json`, `README 2.md`, `SarifService 3.java`, `client 3.ts`, `component 3.tsx`, `component copy.tsx`, `component Copy.tsx`, `*.orig`, and `*.rej`. It intentionally skips `.git`, any `node_modules` directory, `frontend/dist`, and `backend/target`. It prints matching files and exits nonzero, but it does not delete files and does not claim to know why they were created.
 
-`check-secrets.sh` performs conservative high-confidence checks for real-looking AWS access keys, private key headers, GitHub/Slack tokens, and high-entropy credential assignments while excluding or filtering known fake demo fixtures, sample placeholders, and documentation examples.
+`check-secrets.sh` performs conservative high-confidence checks for real-looking AWS access keys, private key headers, GitHub/Slack tokens, and high-entropy credential assignments while excluding or filtering known fake demo fixtures, sample placeholders, and documentation examples. Private key headers are treated as high-confidence failures outside the excluded demo/documentation paths, even if the surrounding line contains placeholder wording.
 
 ## Optional local pre-commit hook
 

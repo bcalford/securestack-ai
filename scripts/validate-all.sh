@@ -43,6 +43,17 @@ step() {
   printf '\n==> %s\n' "$1"
 }
 
+require_command() {
+  local command_name="$1"
+  local install_hint="$2"
+
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    printf '\nERROR: required command not found: %s\n' "$command_name" >&2
+    printf '%s\n' "$install_hint" >&2
+    exit 127
+  fi
+}
+
 run() {
   local label="$1"
   local code
@@ -95,6 +106,7 @@ else
 fi
 
 if [[ "$skip_docker" == false ]]; then
+  require_command docker "Install Docker with the Compose plugin, start Docker, or rerun validation with --skip-docker when Docker is unavailable."
   run "Docker Compose config" docker compose config
   if [[ -f docker-compose.postgres.yml ]]; then
     run "Docker Compose PostgreSQL override config" docker compose -f docker-compose.yml -f docker-compose.postgres.yml config

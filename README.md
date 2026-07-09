@@ -1,6 +1,6 @@
 # SecureStack AI
 
-SecureStack AI v0.5.1 is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and local report exports.
+SecureStack AI v0.8.0-beta is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and local report exports.
 
 ## Features
 
@@ -24,11 +24,16 @@ SecureStack AI v0.5.1 is a local-first defensive security review application for
 
 ## Quick start
 
+For a clean-machine evaluation, clone the repository, run validation, and then start the local Docker Compose stack:
+
 ```bash
+git clone https://github.com/bcalford/securestack-ai.git
+cd securestack-ai
+./scripts/validate-all.sh
 docker compose up --build
 ```
 
-Open `http://localhost:5173` and run the guided sample review.
+Open `http://localhost:5173` and run the guided sample review. The validation command installs frontend dependencies with `npm ci` when `frontend/node_modules` is missing, runs backend and frontend checks, and validates Docker Compose configuration before the app is started.
 
 ## Local validation
 
@@ -46,7 +51,7 @@ For a faster loop that skips backend packaging and frontend production build:
 make validate-quick
 ```
 
-The validation workflow includes duplicate/copy-file guardrails, conservative secret-safety checks, backend tests, frontend lint/tests/build, and Docker Compose configuration checks. GitHub Actions CI mirrors these validation categories for pushes and pull requests to `main`. The duplicate-file guard detects common accidental duplicate names such as `ApiController 2.java`, `SarifService 3.java`, `main 2.css`, `component copy.tsx`, `*.orig`, and `*.rej`; it reports matches without deleting files or claiming to know their root cause. Optional local pre-commit hooks can be installed with `./scripts/install-hooks.sh`.
+The validation workflow includes duplicate/copy-file guardrails, conservative secret-safety checks, backend tests, frontend lint/tests/build, and Docker Compose configuration checks. GitHub Actions CI mirrors these validation categories for pushes and pull requests to `main`. The duplicate-file guard detects common accidental duplicate names such as `ApiController 2.java`, `SarifService 3.java`, `main 2.css`, `component copy.tsx`, `*.orig`, and `*.rej`; it skips `.git`, `node_modules`, `frontend/dist`, and `backend/target`, and reports matches without deleting files or claiming to know their root cause. Optional local pre-commit hooks can be installed with `./scripts/install-hooks.sh`.
 
 ## Local development
 
