@@ -1,68 +1,57 @@
 import { Link } from 'react-router-dom';
+import Card from '../components/ui/Card';
+import SectionHeader from '../components/ui/SectionHeader';
 
-type CardProps = {
-  title: string;
-  description: string;
-};
+const workflow = [
+  { title: 'Add files', description: 'Paste source, upload files/ZIP, pick a safe demo sample, or import a public GitHub repository URL.' },
+  { title: 'Analyze locally', description: 'Deterministic static rules inspect code and configuration without executing anything.' },
+  { title: 'Review risk', description: 'A risk score, severity/category breakdown, and "fix these first" prioritization explain what matters.' },
+  { title: 'Generate report/artifacts', description: 'Get a threat model, risk paths, fix plan, checklist, and PDF/SARIF/JSON/bundle exports.' },
+];
 
-function Card({ title, description }: CardProps) {
+const capabilities = [
+  { title: 'Static analysis rules', description: 'Deterministic checks for secrets, auth, API security, IaC, Docker, and input validation.' },
+  { title: 'Public GitHub URL import', description: 'Import a public repository for local-only analysis. No token, no OAuth, no execution.' },
+  { title: 'Threat model', description: 'Assets, entry points, trust boundaries, and abuse cases derived from findings.' },
+  { title: 'Risk paths', description: 'Related findings grouped into a larger defensive risk narrative.' },
+  { title: 'Fix plan', description: 'Phased remediation by effort and expected risk reduction, with verification steps.' },
+  { title: 'Security checklist', description: 'A verification-driven checklist for confirming remediation before release.' },
+  { title: 'PDF / SARIF / JSON / bundle exports', description: 'Hand off a completed review in the format your workflow needs.' },
+  { title: 'Scan comparison', description: 'Compare two completed scans for risk trend, new, resolved, and unchanged findings.' },
+];
+
+function CapabilityGrid() {
   return (
-    <article className="card">
-      <h3>{title}</h3>
-      <p>{description}</p>
-    </article>
+    <section aria-labelledby="capabilities-heading">
+      <SectionHeader
+        headingId="capabilities-heading"
+        eyebrow="What it can do"
+        title="A complete local-first review workflow"
+        description="From static analysis to export, every step runs against your files without a hosted backend."
+      />
+      <div className="capability-grid">
+        {capabilities.map(item => (
+          <article className="capability-card" key={item.title}>
+            <h3>{item.title}</h3>
+            <p className="helper">{item.description}</p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
-const features = [
-  {
-    title: 'Static analysis',
-    description: 'Detects risky code, auth, logging, and input validation patterns.',
-  },
-  {
-    title: 'Secrets detection',
-    description: 'Flags hardcoded keys, tokens, passwords, and environment-style secrets.',
-  },
-  {
-    title: 'Docker and IaC checks',
-    description: 'Reviews Dockerfiles, Terraform, IAM, S3, and security-group patterns.',
-  },
-  {
-    title: 'Bedrock summaries',
-    description: 'Uses mock summaries by default, with optional manually configured Amazon Bedrock summaries.',
-  },
-  {
-    title: 'PDF export',
-    description: 'Creates concise security review reports.',
-  },
-];
-
-const workflow = [
-  {
-    title: '1. Add files',
-    description: 'Paste, upload, or select safe demo files so you can see exactly what is reviewed.',
-  },
-  {
-    title: '2. Run defensive checks',
-    description: 'Static rules inspect code and configuration without executing uploaded content.',
-  },
-  {
-    title: '3. Review prioritized findings',
-    description: 'The dashboard explains risk score, top fixes, evidence, and recommendations.',
-  },
-  {
-    title: '4. Export a report',
-    description: 'Download a PDF with score, methodology, findings, remediation, and limitations.',
-  },
-];
-
-function CardGrid({ title, items }: { title: string; items: CardProps[] }) {
+function WorkflowSection() {
   return (
-    <section>
-      <h2>{title}</h2>
-      <div className="grid cards">
-        {items.map(item => (
-          <Card key={item.title} {...item} />
+    <section aria-labelledby="workflow-heading">
+      <SectionHeader headingId="workflow-heading" eyebrow="How it works" title="Four steps, entirely local" />
+      <div className="workflow-steps">
+        {workflow.map((step, index) => (
+          <article className="card workflow-step" key={step.title}>
+            <span className="workflow-step-index" aria-hidden="true">{index + 1}</span>
+            <h3>{step.title}</h3>
+            <p className="helper">{step.description}</p>
+          </article>
         ))}
       </div>
     </section>
@@ -88,36 +77,64 @@ export default function LandingPage() {
               Run sample security review
             </Link>
           </p>
+          <p className="helper">
+            <Link to="/sample-report">View sample report</Link> to see example output before running your own review.
+          </p>
         </div>
 
         <aside className="preview" aria-label="Product preview">
-          <h2>What you get</h2>
-          <p><b>Risk score</b> with plain-English context.</p>
-          <p><b>Fix these first</b> prioritization.</p>
-          <p><b>Mock or Bedrock</b> summary badge.</p>
-          <p><b>PDF report</b> for completed reviews.</p>
+          <h2 className="visually-hidden">Product preview</h2>
+          <div className="preview-score">
+            <span>Risk score</span>
+            <strong>78</strong>
+            <span className="badge badge-neutral">HIGH</span>
+          </div>
+          <div className="preview-chips" aria-label="Example findings">
+            <span className="badge sev-CRITICAL">CRITICAL · Hardcoded credential</span>
+            <span className="badge sev-HIGH">HIGH · Missing authorization</span>
+            <span className="badge sev-MEDIUM">MEDIUM · Public storage bucket</span>
+          </div>
+          <div className="preview-chips" aria-label="Export formats">
+            <span className="preview-chip">PDF</span>
+            <span className="preview-chip">SARIF</span>
+            <span className="preview-chip">JSON</span>
+            <span className="preview-chip">Bundle</span>
+          </div>
+          <ul className="preview-list">
+            <li>Uploaded code is never executed</li>
+            <li>Mock AI summaries by default</li>
+            <li>Raw file storage disabled by default</li>
+          </ul>
         </aside>
       </section>
 
-      <CardGrid title="Features" items={features} />
-      <CardGrid title="How it works" items={workflow} />
+      <WorkflowSection />
+      <CapabilityGrid />
 
-      <section className="card trust">
+      <Card as="section" className="trust">
         <h2>Trust and safety</h2>
         <p>
           SecureStack AI treats uploaded files as untrusted, does not execute code,
           masks secret-like evidence, and uses mock AI by default.
         </p>
+        <div className="trust-strip">
+          <p className="trust-strip-item"><span className="trust-strip-icon" aria-hidden="true">✓</span><span><strong>Code is not executed.</strong> Static analysis only, on pasted, uploaded, or imported files.</span></p>
+          <p className="trust-strip-item"><span className="trust-strip-icon" aria-hidden="true">✓</span><span><strong>Mock AI by default.</strong> Amazon Bedrock is optional and manually configured.</span></p>
+          <p className="trust-strip-item"><span className="trust-strip-icon" aria-hidden="true">✓</span><span><strong>Raw file storage disabled by default.</strong> Findings mask secret-like evidence.</span></p>
+          <p className="trust-strip-item"><span className="trust-strip-icon" aria-hidden="true">✓</span><span><strong>Public GitHub import is public-only.</strong> No token, OAuth, or private repository access.</span></p>
+        </div>
         <p>
           <Link to="/scans/new">Start review</Link>
           {' · '}
           <Link to="/scans/new?sample=full-portfolio-demo">Sample review</Link>
           {' · '}
+          <Link to="/sample-report">Sample report</Link>
+          {' · '}
           <Link to="/scans">Review history</Link>
           {' · '}
           <Link to="/about">About/architecture</Link>
         </p>
-      </section>
+      </Card>
     </main>
   );
 }

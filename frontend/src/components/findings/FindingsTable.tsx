@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import { updateFindingStatus } from '../../api/client';
-import type { Finding } from '../../types';
+import type { ControlMapping, Finding } from '../../types';
+import EmptyState from '../ui/EmptyState';
+import ErrorState from '../ui/ErrorState';
+import FindingCard from '../ui/FindingCard';
+import SeverityBadge from '../ui/SeverityBadge';
+import StatusBadge from '../ui/StatusBadge';
 import FindingDetails from './FindingDetails';
 
 type FindingsTableProps = {
   scanId: string;
   rows: Finding[];
+  controlMappingsByRuleId?: Record<string, ControlMapping[]>;
 };
 
-export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
+export default function FindingsTable({ scanId, rows, controlMappingsByRuleId = {} }: FindingsTableProps) {
   const [local, setLocal] = useState<Finding[]>(rows);
   const [error, setError] = useState('');
 
@@ -31,29 +37,32 @@ export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
 
   if (!local.length) {
     return (
-      <p className="card empty-state">
+      <EmptyState>
         No findings match the current filters. Clear filters or review the summary if this was a clean scan.
-      </p>
+      </EmptyState>
     );
   }
 
   return (
     <section className="finding-list" aria-label="Finding details">
-      {error && <p role="alert" className="error">{error}</p>}
+      {error && <ErrorState>{error}</ErrorState>}
 
       {local.map(finding => (
-        <article className="card finding-card" key={finding.id}>
-          <header>
-            <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
-            <span className="badge">{finding.category}</span>
-            <h3>{finding.title}</h3>
-            <p>
-              {finding.fileName}{finding.lineNumber ? `:${finding.lineNumber}` : ''}
-              {' '}· Confidence: {finding.confidence}
-            </p>
-          </header>
-
-          <FindingDetails finding={finding} />
+        <FindingCard
+          key={finding.id}
+          id={`finding-${finding.id}`}
+          title={finding.title}
+          meta={`${finding.fileName}${finding.lineNumber ? `:${finding.lineNumber}` : ''}`}
+          badges={(
+            <>
+              <SeverityBadge severity={finding.severity} />
+              <span className="badge">{finding.category}</span>
+              <StatusBadge label={`Confidence: ${finding.confidence}`} />
+              <StatusBadge label={`Status: ${finding.status}`} />
+            </>
+          )}
+        >
+          <FindingDetails finding={finding} controlMappings={controlMappingsByRuleId[finding.ruleId]} />
 
           <label>
             Status
@@ -70,7 +79,7 @@ export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
           </label>
 
           <p className="rule-id">Rule ID: {finding.ruleId}</p>
-        </article>
+        </FindingCard>
       ))}
     </section>
   );

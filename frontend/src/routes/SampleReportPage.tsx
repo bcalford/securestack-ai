@@ -4,6 +4,7 @@ import CategoryBreakdown from '../components/dashboard/CategoryBreakdown';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import SeverityChart from '../components/dashboard/SeverityChart';
 import FindingDetails from '../components/findings/FindingDetails';
+import SeverityBadge from '../components/ui/SeverityBadge';
 import { sampleReport } from '../data/sampleReport';
 import { topPriorityFindings } from '../utils/risk';
 
@@ -23,7 +24,7 @@ function ReadOnlyFindings() {
       {sampleReport.findings.map(finding => (
         <article className="card finding-card" key={finding.id}>
           <header>
-            <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
+            <SeverityBadge severity={finding.severity} />
             <span className="badge">{finding.category}</span>
             <span className="badge">Status: {finding.status}</span>
             <h3>{finding.title}</h3>
@@ -45,7 +46,9 @@ export default function SampleReportPage() {
 
   return (
     <main className="container">
-      <section className="results-hero">
+      <p className="badge badge-neutral sample-flag" role="note">Sample data — not a live scan</p>
+
+      <section className="results-hero sample-report-hero">
         <div>
           <p className="eyebrow">Static sample report</p>
           <h1>{sampleReport.name}</h1>
@@ -66,11 +69,14 @@ export default function SampleReportPage() {
         </div>
       </section>
 
-      <div className="grid cards" aria-label="Sample severity and category summary">
-        <RiskSummaryCards scan={sampleReport} />
-        <SeverityChart counts={sampleReport.severityCounts} />
-        <CategoryBreakdown counts={sampleReport.categoryCounts} />
-      </div>
+      <section aria-labelledby="sample-summary-cards-heading">
+        <h2 id="sample-summary-cards-heading" className="visually-hidden">Summary at a glance</h2>
+        <div className="grid cards" aria-label="Sample severity and category summary">
+          <RiskSummaryCards scan={sampleReport} />
+          <SeverityChart counts={sampleReport.severityCounts} />
+          <CategoryBreakdown counts={sampleReport.categoryCounts} />
+        </div>
+      </section>
 
       <section className="card">
         <h2>Files reviewed</h2>
@@ -83,7 +89,7 @@ export default function SampleReportPage() {
         <h2>Prioritized findings</h2>
         {prioritized.map(finding => (
           <article key={finding.id}>
-            <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
+            <SeverityBadge severity={finding.severity} />
             {' '}<b>{finding.title}</b>
             <p>{finding.recommendation}</p>
           </article>
@@ -102,24 +108,28 @@ export default function SampleReportPage() {
         <ReadOnlyFindings />
       </section>
 
-      <section className="card">
-        <h2>Methodology</h2>
-        <p>
-          SecureStack AI validates submitted files, treats all content as untrusted, applies deterministic
-          defensive static-analysis rules, scores risk from severity and confidence, and generates a concise
-          remediation-oriented summary using the configured AI provider.
-        </p>
+      <section className="card about-report">
+        <h2>About this sample report</h2>
+        <div className="grid cards">
+          <div>
+            <h3>Methodology</h3>
+            <p>
+              SecureStack AI validates submitted files, treats all content as untrusted, applies deterministic
+              defensive static-analysis rules, scores risk from severity and confidence, and generates a concise
+              remediation-oriented summary using the configured AI provider.
+            </p>
+          </div>
+          <div>
+            <h3>Limitations</h3>
+            <p>
+              This static report is illustrative only. It does not represent a live scan, execute code, prove exploitability,
+              replace manual review, or guarantee that every vulnerability in a real project would be found.
+            </p>
+          </div>
+        </div>
       </section>
 
-      <section className="card">
-        <h2>Limitations</h2>
-        <p>
-          This static report is illustrative only. It does not represent a live scan, execute code, prove exploitability,
-          replace manual review, or guarantee that every vulnerability in a real project would be found.
-        </p>
-      </section>
-
-      <section className="card">
+      <section className="card cta-banner">
         <h2>Run the guided sample review</h2>
         <p>Use the guided sample to create a fresh local review with the normal scan workflow.</p>
         <Link className="btn" to="/scans/new?sample=full-portfolio-demo">Run sample security review</Link>

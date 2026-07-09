@@ -1,2 +1,12 @@
+import MetricCard from '../ui/MetricCard';
 import type { Scan } from '../../types';
-export default function RiskSummaryCards({ scan }: { scan: Scan }) { return <><div className="card"><h3>Risk score</h3><p>{scan.riskScore}/100 ({scan.riskLevel})</p></div><div className="card"><h3>Files scanned</h3><p>{scan.fileCount}</p></div><div className="card"><h3>Findings</h3><p>{scan.findingCount}</p></div></>; }
+
+export default function RiskSummaryCards({ scan }: { scan: Scan }) {
+  return (
+    <>
+      <MetricCard label="Risk score" value={`${scan.riskScore}/100 (${scan.riskLevel})`} />
+      <MetricCard label="Files scanned" value={scan.fileCount} />
+      <MetricCard label="Findings" value={scan.findingCount} />
+    </>
+  );
+}

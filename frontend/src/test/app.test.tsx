@@ -3,7 +3,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
-import type { Finding, FixPlan, RiskPathResponse, Scan, SecurityChecklist, ThreatModel } from '../types';
+import { ThemeProvider } from '../theme/ThemeContext';
+import type { Finding, FixPlan, RiskPathResponse, RuleCatalogItem, Scan, SecurityChecklist, ThreatModel } from '../types';
 import { topPriorityFindings } from '../utils/risk';
 import { compareScans } from '../utils/scanComparison';
 
@@ -118,6 +119,21 @@ const checklist: SecurityChecklist = {
   items: [{ id: 'secrets-reviewed', label: 'Secrets reviewed', status: 'pending', guidance: 'Review related finding IDs before release.' }],
 };
 
+const rulesCatalog: RuleCatalogItem[] = [
+  {
+    id: 'SEC-002',
+    title: 'Hardcoded credential',
+    category: 'SECRETS',
+    severity: 'HIGH',
+    description: 'Detects hardcoded credentials in source.',
+    recommendation: 'Use a secrets manager and rotate exposed values.',
+    controlMappings: [
+      { framework: 'OWASP Top 10', value: 'A02:2021 Cryptographic Failures' },
+      { framework: 'CWE', value: 'CWE-798 Use of Hard-coded Credentials' },
+    ],
+  },
+];
+
 function jsonResponse(body: unknown, status = 200) {
   return Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
 }
@@ -135,11 +151,13 @@ function renderPath(path = '/') {
   });
 
   return render(
-    <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[path]}>
-        <App />
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <ThemeProvider>
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>
+      </QueryClientProvider>
+    </ThemeProvider>,
   );
 }
 
@@ -150,6 +168,7 @@ function mockScanResponse(body: Scan = scan) {
     if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
     if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
     if (url.endsWith('/checklist')) return jsonResponse(checklist);
+    if (url.endsWith('/rules')) return jsonResponse(rulesCatalog);
     return jsonResponse(body);
   });
 }
@@ -162,6 +181,7 @@ function mockResultsFetchWithEndpoint(endpoint: string, body: unknown, status = 
     if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
     if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
     if (url.endsWith('/checklist')) return jsonResponse(checklist);
+    if (url.endsWith('/rules')) return jsonResponse(rulesCatalog);
     if (url.endsWith(endpoint)) return jsonResponse(body, status);
     return jsonResponse(scan);
   });
@@ -169,6 +189,8 @@ function mockResultsFetchWithEndpoint(endpoint: string, body: unknown, status = 
 
 beforeEach(() => {
   vi.restoreAllMocks();
+  window.localStorage.clear();
+  document.documentElement.removeAttribute('data-theme');
 });
 
 describe('landing page', () => {
@@ -181,6 +203,79 @@ describe('landing page', () => {
       'href',
       '/scans/new?sample=full-portfolio-demo',
     );
+  });
+
+  test('hero includes a tertiary link to the static sample report', () => {
+    renderPath('/');
+
+    expect(screen.getByRole('link', { name: 'View sample report' })).toHaveAttribute('href', '/sample-report');
+  });
+
+  test('landing page explains safety and local-first handling', () => {
+    renderPath('/');
+
+    expect(screen.getByRole('heading', { name: 'Trust and safety' })).toBeInTheDocument();
+    expect(screen.getByText(/treats uploaded files as untrusted, does not execute code/i)).toBeInTheDocument();
+  });
+
+  test('landing page shows a product preview panel with mock score, findings, and exports', () => {
+    renderPath('/');
+
+    expect(screen.getByLabelText('Product preview')).toBeInTheDocument();
+    expect(screen.getByText('CRITICAL · Hardcoded credential')).toBeInTheDocument();
+    expect(screen.getByLabelText('Export formats')).toBeInTheDocument();
+    expect(screen.getByText('Uploaded code is never executed')).toBeInTheDocument();
+  });
+
+  test('landing page workflow and capability grid cover the required items', () => {
+    renderPath('/');
+
+    expect(screen.getByText('Add files')).toBeInTheDocument();
+    expect(screen.getByText('Analyze locally')).toBeInTheDocument();
+    expect(screen.getByText('Review risk')).toBeInTheDocument();
+    expect(screen.getByText('Generate report/artifacts')).toBeInTheDocument();
+
+    expect(screen.getByText('Static analysis rules')).toBeInTheDocument();
+    expect(screen.getByText('Public GitHub URL import')).toBeInTheDocument();
+    expect(screen.getByText('Threat model')).toBeInTheDocument();
+    expect(screen.getByText('Risk paths')).toBeInTheDocument();
+    expect(screen.getByText('Fix plan')).toBeInTheDocument();
+    expect(screen.getByText('Security checklist')).toBeInTheDocument();
+    expect(screen.getByText('PDF / SARIF / JSON / bundle exports')).toBeInTheDocument();
+    expect(screen.getByText('Scan comparison')).toBeInTheDocument();
+  });
+
+  test('landing page contains no placeholder text', () => {
+    renderPath('/');
+
+    expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lorem ipsum/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('theme', () => {
+  test('defaults to dark theme on first load', () => {
+    renderPath('/');
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+    expect(screen.getByRole('button', { name: 'Switch to light theme' })).toBeInTheDocument();
+  });
+
+  test('theme toggle switches to light mode and persists the choice', () => {
+    renderPath('/');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to light theme' }));
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
+    expect(window.localStorage.getItem('securestack-theme')).toBe('light');
+    expect(screen.getByRole('button', { name: 'Switch to dark theme' })).toBeInTheDocument();
+  });
+
+  test('explicit user preference overrides the default on remount', () => {
+    window.localStorage.setItem('securestack-theme', 'light');
+    renderPath('/');
+
+    expect(document.documentElement).toHaveAttribute('data-theme', 'light');
   });
 });
 
@@ -234,7 +329,9 @@ describe('scan form', () => {
 
     expect(screen.getByLabelText('Public GitHub repository URL')).toBeInTheDocument();
     expect(screen.getByText(/Public GitHub repositories only/i)).toBeInTheDocument();
-    expect(screen.getByText(/Analysis runs locally after import/i)).toBeInTheDocument();
+    expect(screen.getByText(/private repositories are not supported/i)).toBeInTheDocument();
+    expect(screen.getByText(/repository is downloaded/i)).toBeInTheDocument();
+    expect(screen.getByText(/analysis runs locally after import/i)).toBeInTheDocument();
     expect(screen.getByText(/No token is needed/i)).toBeInTheDocument();
     expect(screen.getByText(/Uploaded or imported code is not executed/i)).toBeInTheDocument();
   });
@@ -354,10 +451,20 @@ describe('scan form', () => {
 
 
 describe('about and sample report pages', () => {
-  test('about page links to the static sample report', () => {
+  test('about page explains what the app does and its local-first boundary', () => {
+    renderPath('/about');
+
+    expect(screen.getByRole('heading', { name: 'About SecureStack AI' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'What it does' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Local-first security boundary' })).toBeInTheDocument();
+    expect(screen.getByText(/never executed/i)).toBeInTheDocument();
+  });
+
+  test('about page links to the static sample report and rule catalog', () => {
     renderPath('/about');
 
     expect(screen.getByRole('link', { name: /static sample report/i })).toHaveAttribute('href', '/sample-report');
+    expect(screen.getByRole('link', { name: /rule catalog/i })).toHaveAttribute('href', '/rules');
   });
 
   test('sample report renders real report content', () => {
@@ -370,6 +477,17 @@ describe('about and sample report pages', () => {
     expect(screen.getByRole('heading', { name: 'Methodology' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Limitations' })).toBeInTheDocument();
     expect(screen.queryByText(/placeholder/i)).not.toBeInTheDocument();
+  });
+
+  test('sample report clearly flags static sample data and offers the guided sample CTA', () => {
+    renderPath('/sample-report');
+
+    expect(screen.getByText(/Sample data.+not a live scan/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'About this sample report' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Run sample security review' })).toHaveAttribute(
+      'href',
+      '/scans/new?sample=full-portfolio-demo',
+    );
   });
 });
 
@@ -466,6 +584,22 @@ describe('scan comparison', () => {
     expect(screen.getByText('-10')).toBeInTheDocument();
   });
 
+  test('compare page renders unchanged findings and explains matching limitations', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(newerScan), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    renderPath('/scans/compare?left=scan-1&right=scan-2');
+
+    expect(await screen.findByRole('heading', { name: 'Unchanged findings' })).toBeInTheDocument();
+    expect(screen.getByText('No unchanged findings between these scans.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Changed findings' })).toBeInTheDocument();
+    expect(screen.getByText('Hardcoded credential — app.js:1')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'How findings are matched' })).toBeInTheDocument();
+    expect(screen.getByText(/matched between scans by rule ID, file, line, title, category, and evidence/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Choose different scans' })).toHaveAttribute('href', '/scans');
+  });
+
   test('scan history allows selecting two scans for comparison', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify([scan, newerScan]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
@@ -480,6 +614,44 @@ describe('scan comparison', () => {
     expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('href', '/scans/compare?left=scan-1&right=scan-2');
     expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('aria-disabled', 'false');
   });
+
+  test('scan history renders scan cards with risk level, score, and finding count', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([scan, newerScan]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    expect(screen.getByRole('heading', { name: 'Previous scans' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Demo review' })).toHaveAttribute('href', '/scans/scan-1');
+    expect(screen.getByRole('link', { name: 'Follow-up review' })).toHaveAttribute('href', '/scans/scan-2');
+    expect(screen.getAllByText('Risk level: MODERATE')).toHaveLength(2);
+    expect(screen.getByText('Risk score: 80/100')).toBeInTheDocument();
+    expect(screen.getByText('Risk score: 70/100')).toBeInTheDocument();
+    expect(screen.getAllByText('Findings: 2')).toHaveLength(2);
+    expect(screen.getByText('2 scan(s) in history.')).toBeInTheDocument();
+  });
+
+  test('scan history empty state is controlled', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    expect(await screen.findByText('No scans yet. Start a new security review to populate history.')).toBeInTheDocument();
+  });
+
+  test('scan history error state is controlled', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'backend detail' }), { status: 500, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load scan history.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
 });
 
 describe('results page', () => {
@@ -492,21 +664,33 @@ describe('results page', () => {
     expect(screen.getAllByText('Risk score')[0]).toBeInTheDocument();
     expect(screen.getAllByText('80')[0]).toBeInTheDocument();
     expect(screen.getAllByText('Summary provider: mock')[0]).toBeInTheDocument();
+    expect(screen.getByText('Files reviewed: 1')).toBeInTheDocument();
+    expect(screen.getByText('Findings: 2')).toBeInTheDocument();
+    expect(screen.getByText('Files in this review (1)')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Fix these first' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Defensive Security Review Summary' })).toBeInTheDocument();
     expect(screen.getByText('Prioritize secret rotation')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Findings' })).toBeInTheDocument();
+    expect(screen.getByText('Showing 2 of 2 finding(s).')).toBeInTheDocument();
+
+    const fixFirstLink = screen.getByRole('link', { name: 'Hardcoded credential' });
+    expect(fixFirstLink).toHaveAttribute('href', '#finding-finding-1');
 
     const findingCard = screen.getByLabelText('Update status for Hardcoded credential').closest('article');
     expect(findingCard).not.toBeNull();
+    expect(findingCard).toHaveAttribute('id', 'finding-finding-1');
 
     const finding = within(findingCard as HTMLElement);
+    expect(finding.getByText('Confidence: HIGH')).toBeInTheDocument();
+    expect(finding.getByText('Status: OPEN')).toBeInTheDocument();
     expect(finding.getByText('Evidence')).toBeInTheDocument();
     expect(finding.getByText('password=********')).toBeInTheDocument();
     expect(finding.getByText('Recommended fix')).toBeInTheDocument();
     expect(finding.getByText('Use a secrets manager and rotate exposed values.')).toBeInTheDocument();
     expect(finding.getByText('Secure example')).toBeInTheDocument();
     expect(finding.getByText('const password = process.env.DB_PASSWORD;')).toBeInTheDocument();
+    expect(finding.getByText('Control mappings')).toBeInTheDocument();
+    expect(finding.getByText(/OWASP Top 10: A02:2021 Cryptographic Failures/)).toBeInTheDocument();
     expect(finding.getByLabelText('Update status for Hardcoded credential')).toHaveValue('OPEN');
     expect(finding.getByText('Rule ID: SEC-002')).toBeInTheDocument();
   });
@@ -521,6 +705,8 @@ describe('results page', () => {
     expect(screen.getByText('Risk paths')).toBeInTheDocument();
     expect(screen.getByText('Fix plan')).toBeInTheDocument();
     expect(screen.getByText('Security review checklist')).toBeInTheDocument();
+    expect(screen.getByText(/Assets, entry points, trust boundaries, and abuse cases inferred/)).toBeInTheDocument();
+    expect(screen.getByText(/A verification-driven checklist for confirming remediation/)).toBeInTheDocument();
   });
 
   test('mocked threat model renders defensive sections', async () => {
@@ -590,6 +776,9 @@ describe('results page', () => {
     expect(screen.getByRole('button', { name: 'Download SARIF' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download JSON' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download bundle' })).toBeInTheDocument();
+    expect(screen.getByText(/Hardened SARIF 2.1.0 JSON for import into code scanning tools/)).toBeInTheDocument();
+    expect(screen.getByText(/Full structured scan data for local tooling or automation/)).toBeInTheDocument();
+    expect(screen.getByText(/ZIP containing the generated reports for handoff or archival/)).toBeInTheDocument();
   });
 
   test('SARIF export downloads from the expected endpoint', async () => {
@@ -726,6 +915,7 @@ describe('results page', () => {
     fireEvent.change(screen.getByLabelText('Search findings'), { target: { value: 'no-match' } });
 
     expect(screen.getByText(/No findings match the current filters/)).toBeInTheDocument();
+    expect(screen.getByText('Showing 0 of 2 finding(s).')).toBeInTheDocument();
   });
 
   test('results page status summary renders', async () => {
@@ -809,6 +999,7 @@ describe('rule catalog page', () => {
       title: 'Secret detection',
       category: 'SECRETS',
       severity: 'HIGH',
+      confidence: 'HIGH',
       description: 'Detects committed credentials.',
       recommendation: 'Rotate exposed credentials and use a managed secret store.',
       secureExample: 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}',
@@ -866,6 +1057,36 @@ describe('rule catalog page', () => {
     expect(screen.queryByText('Wildcard CORS policy')).not.toBeInTheDocument();
   });
 
+  test('/rules shows a rule count summary, confidence badge, and false-positive note', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    expect(screen.getByText('Showing 2 of 2 rule(s).')).toBeInTheDocument();
+    expect(screen.getByText('Confidence: HIGH')).toBeInTheDocument();
+    expect(screen.getByText('Sample keys may be fake.')).toBeInTheDocument();
+  });
+
+  test('/rules clear filters button resets search and restores hidden rules', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    fireEvent.change(screen.getByLabelText('Search rules'), { target: { value: 'no-match-at-all' } });
+
+    expect(screen.getByText('No rules match your filter.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(screen.getByText('Secret detection')).toBeInTheDocument();
+    expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
+  });
+
   test('/rules shows controlled empty and error states', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
@@ -882,5 +1103,41 @@ describe('rule catalog page', () => {
     renderPath('/rules');
     expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load rule catalog.');
     expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
+  });
+});
+
+describe('navigation and accessibility', () => {
+  test('skip link and primary navigation render with a real landmark', () => {
+    renderPath('/');
+
+    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
+  });
+
+  test('active nav link is marked with aria-current for the current route', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    const historyLink = await screen.findByRole('link', { name: 'History' });
+    expect(historyLink).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Rules' })).not.toHaveAttribute('aria-current');
+  });
+
+  test('compare link is not keyboard-operable until two scans are selected', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([scan, { ...scan, id: 'scan-2', name: 'Follow-up review' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    renderPath('/scans');
+
+    const compareLink = await screen.findByRole('link', { name: 'Compare selected scans' });
+    expect(compareLink).toHaveAttribute('aria-disabled', 'true');
+    expect(compareLink).toHaveAttribute('tabIndex', '-1');
   });
 });

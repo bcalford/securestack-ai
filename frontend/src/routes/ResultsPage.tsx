@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getChecklist, getFixPlan, getRiskPaths, getScan, getThreatModel } from '../api/client';
+import { getChecklist, getFixPlan, getRiskPaths, getScan, getThreatModel, listRules } from '../api/client';
 import CategoryBreakdown from '../components/dashboard/CategoryBreakdown';
 import RiskSummaryCards from '../components/dashboard/RiskSummaryCards';
 import SeverityChart from '../components/dashboard/SeverityChart';
@@ -10,7 +10,13 @@ import FindingFilters, { type Filters } from '../components/findings/FindingFilt
 import FindingsTable from '../components/findings/FindingsTable';
 import RemediationStatusSummary from '../components/findings/RemediationStatusSummary';
 import ReportActions from '../components/reports/ReportActions';
-import type { ChecklistItem, Finding, FixPlanItem, RiskPath, ThreatModel } from '../types';
+import AlertState from '../components/ui/ErrorState';
+import InlineLoadingState from '../components/ui/LoadingState';
+import SectionHeader from '../components/ui/SectionHeader';
+import SeverityBadge from '../components/ui/SeverityBadge';
+import StatRail from '../components/ui/StatRail';
+import StatusBadge from '../components/ui/StatusBadge';
+import type { ChecklistItem, ControlMapping, Finding, FixPlanItem, RiskPath, ThreatModel } from '../types';
 import { buildRiskExplanation, sortFindingsByPriority, topPriorityFindings } from '../utils/risk';
 
 const markdownElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'strong', 'em', 'ul', 'ol', 'li', 'code', 'pre'];
@@ -34,32 +40,38 @@ function CompactList({ items }: { items: string[] }) {
 
 function ThreatModelCard({ threatModel }: { threatModel: ThreatModel }) {
   return (
-    <details className="artifact-card" open>
-      <summary>Threat model</summary>
-      <div className="artifact-grid">
-        <div><h4>Assets</h4><CompactList items={threatModel.assets} /></div>
-        <div><h4>Entry points</h4><CompactList items={threatModel.entryPoints} /></div>
-        <div><h4>Trust boundaries</h4><CompactList items={threatModel.trustBoundaries} /></div>
-        <div><h4>Abuse cases</h4><CompactList items={threatModel.abuseCases} /></div>
-        <div><h4>Recommended controls</h4><CompactList items={threatModel.recommendedControls} /></div>
-      </div>
-    </details>
+    <div>
+      <p className="helper">Assets, entry points, trust boundaries, and abuse cases inferred from this review's findings.</p>
+      <details className="artifact-card" open>
+        <summary>Threat model</summary>
+        <div className="artifact-grid">
+          <div><h4>Assets</h4><CompactList items={threatModel.assets} /></div>
+          <div><h4>Entry points</h4><CompactList items={threatModel.entryPoints} /></div>
+          <div><h4>Trust boundaries</h4><CompactList items={threatModel.trustBoundaries} /></div>
+          <div><h4>Abuse cases</h4><CompactList items={threatModel.abuseCases} /></div>
+          <div><h4>Recommended controls</h4><CompactList items={threatModel.recommendedControls} /></div>
+        </div>
+      </details>
+    </div>
   );
 }
 
 function RiskPathCard({ riskPaths }: { riskPaths: RiskPath[] }) {
   return (
-    <details className="artifact-card">
-      <summary>Risk paths</summary>
-      {(riskPaths ?? []).map(path => (
-        <article className="artifact-item" key={path.id}>
-          <h4>{path.name}</h4>
-          <p>{path.narrative}</p>
-          <p><b>Related findings:</b> {path.relatedFindingIds.length ? path.relatedFindingIds.join(', ') : 'None identified'}</p>
-          <p><b>Remediation theme:</b> {path.remediationThemes.join('; ')}</p>
-        </article>
-      ))}
-    </details>
+    <div>
+      <p className="helper">Groups of related findings that combine into a larger defensive risk if left unaddressed.</p>
+      <details className="artifact-card">
+        <summary>Risk paths</summary>
+        {(riskPaths ?? []).map(path => (
+          <article className="artifact-item" key={path.id}>
+            <h4>{path.name}</h4>
+            <p>{path.narrative}</p>
+            <p><b>Related findings:</b> {path.relatedFindingIds.length ? path.relatedFindingIds.join(', ') : 'None identified'}</p>
+            <p><b>Remediation theme:</b> {path.remediationThemes.join('; ')}</p>
+          </article>
+        ))}
+      </details>
+    </div>
   );
 }
 
@@ -81,18 +93,21 @@ function FixPlanGroup({ title, items }: { title: string; items: FixPlanItem[] })
 
 function ChecklistCard({ items }: { items: ChecklistItem[] }) {
   return (
-    <details className="artifact-card">
-      <summary>Security review checklist</summary>
-      <div className="checklist-grid">
-        {(items ?? []).map(item => (
-          <article className="artifact-item" key={item.id}>
-            <b>{item.label}</b>
-            <p><span className="badge">{item.status}</span><span className="badge">Category: {item.id}</span></p>
-            <p>{item.guidance}</p>
-          </article>
-        ))}
-      </div>
-    </details>
+    <div>
+      <p className="helper">A verification-driven checklist for confirming remediation before release.</p>
+      <details className="artifact-card">
+        <summary>Security review checklist</summary>
+        <div className="checklist-grid">
+          {(items ?? []).map(item => (
+            <article className="artifact-item" key={item.id}>
+              <b>{item.label}</b>
+              <p><StatusBadge label={item.status} /><span className="badge">Category: {item.id}</span></p>
+              <p>{item.guidance}</p>
+            </article>
+          ))}
+        </div>
+      </details>
+    </div>
   );
 }
 
@@ -124,12 +139,13 @@ function FixFirstPanel({ findings }: { findings: Finding[] }) {
   const top = topPriorityFindings(findings);
 
   return (
-    <section className="card fix-first">
-      <h2>Fix these first</h2>
+    <section className="card fix-first" aria-labelledby="fix-first-heading">
+      <h2 id="fix-first-heading">Fix these first</h2>
       {top.length ? top.map(finding => (
         <article key={finding.id}>
-          <span className={`badge sev-${finding.severity}`}>{finding.severity}</span>
-          {' '}<b>{finding.title}</b>
+          <SeverityBadge severity={finding.severity} />
+          {' '}<StatusBadge label={finding.status} />
+          {' '}<a href={`#finding-${finding.id}`}><b>{finding.title}</b></a>
           <p>
             {finding.fileName}{finding.lineNumber ? `:${finding.lineNumber}` : ''}
             {' '}— {finding.recommendation}
@@ -161,6 +177,16 @@ export default function ResultsPage() {
       return { threatModel, riskPaths, fixPlan, checklist };
     },
   });
+  const rulesQuery = useQuery({ queryKey: ['rules'], queryFn: listRules });
+  const controlMappingsByRuleId = useMemo(() => {
+    const map: Record<string, ControlMapping[]> = {};
+    if (Array.isArray(rulesQuery.data)) {
+      rulesQuery.data.forEach(rule => {
+        if (rule.controlMappings?.length) map[rule.id] = rule.controlMappings;
+      });
+    }
+    return map;
+  }, [rulesQuery.data]);
   const [filters, setFilters] = useState<Filters>({ search: '', severity: '', category: '', status: '', confidence: '', sortBy: 'priority' });
 
   if (isLoading) return <LoadingState />;
@@ -195,6 +221,14 @@ export default function ResultsPage() {
             <span className="badge">Files reviewed: {data.fileCount}</span>
             <span className="badge">Findings: {data.findingCount}</span>
           </p>
+          {!!data.files?.length && (
+            <details className="finding-details">
+              <summary>Files in this review ({data.files.length})</summary>
+              <ul>
+                {data.files.map(file => <li key={file}>{file}</li>)}
+              </ul>
+            </details>
+          )}
         </div>
         <div className="score-card">
           <span>Risk score</span>
@@ -203,11 +237,14 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      <div className="grid cards">
-        <RiskSummaryCards scan={data} />
-        <SeverityChart counts={data.severityCounts} />
-        <CategoryBreakdown counts={data.categoryCounts} />
-      </div>
+      <section aria-labelledby="summary-cards-heading">
+        <h2 id="summary-cards-heading" className="visually-hidden">Summary at a glance</h2>
+        <StatRail ariaLabel="Summary at a glance">
+          <RiskSummaryCards scan={data} />
+          <SeverityChart counts={data.severityCounts} />
+          <CategoryBreakdown counts={data.categoryCounts} />
+        </StatRail>
+      </section>
 
       <FixFirstPanel findings={data.findings} />
       <RemediationStatusSummary findings={data.findings} />
@@ -222,25 +259,31 @@ export default function ResultsPage() {
       </section>
 
       <section className="card review-artifacts" aria-labelledby="review-artifacts-heading">
-        <p className="eyebrow">Backend-generated review artifacts</p>
-        <h2 id="review-artifacts-heading">Security review artifacts</h2>
-        <p className="helper">Concise defensive outputs for planning remediation and verification.</p>
+        <SectionHeader
+          headingId="review-artifacts-heading"
+          eyebrow="Backend-generated review artifacts"
+          title="Security review artifacts"
+          description="Concise defensive outputs for planning remediation and verification."
+        />
         {reviewArtifacts.isError && (
-          <p className="error" role="alert">Unable to load security review artifacts. Please try again.</p>
+          <AlertState>Unable to load security review artifacts. Please try again.</AlertState>
         )}
-        {reviewArtifacts.isLoading && <p className="helper">Loading security review artifacts…</p>}
+        {reviewArtifacts.isLoading && <InlineLoadingState>Loading security review artifacts…</InlineLoadingState>}
         {reviewArtifacts.data && (
           <div className="artifact-stack">
             <ThreatModelCard threatModel={reviewArtifacts.data.threatModel} />
             <RiskPathCard riskPaths={reviewArtifacts.data.riskPaths.riskPaths} />
-            <details className="artifact-card">
-              <summary>Fix plan</summary>
-              <div className="artifact-grid">
-                <FixPlanGroup title="Fix first" items={reviewArtifacts.data.fixPlan.fixFirst} />
-                <FixPlanGroup title="Fix next" items={reviewArtifacts.data.fixPlan.fixNext} />
-                <FixPlanGroup title="Hardening backlog" items={reviewArtifacts.data.fixPlan.hardeningBacklog} />
-              </div>
-            </details>
+            <div>
+              <p className="helper">A phased plan for prioritizing remediation work by effort and expected risk reduction.</p>
+              <details className="artifact-card">
+                <summary>Fix plan</summary>
+                <div className="artifact-grid">
+                  <FixPlanGroup title="Fix first" items={reviewArtifacts.data.fixPlan.fixFirst} />
+                  <FixPlanGroup title="Fix next" items={reviewArtifacts.data.fixPlan.fixNext} />
+                  <FixPlanGroup title="Hardening backlog" items={reviewArtifacts.data.fixPlan.hardeningBacklog} />
+                </div>
+              </details>
+            </div>
             <ChecklistCard items={reviewArtifacts.data.checklist.items} />
           </div>
         )}
@@ -248,10 +291,11 @@ export default function ResultsPage() {
 
       <ReportActions scanId={data.id} />
 
-      <section>
-        <h2>Findings</h2>
+      <section aria-labelledby="findings-heading">
+        <SectionHeader headingId="findings-heading" eyebrow="Prioritized results" title="Findings" />
         <FindingFilters filters={filters} setFilters={setFilters} categories={Object.keys(data.categoryCounts)} />
-        <FindingsTable scanId={data.id} rows={rows} />
+        <p className="helper">Showing {rows.length} of {data.findingCount} finding(s).</p>
+        <FindingsTable scanId={data.id} rows={rows} controlMappingsByRuleId={controlMappingsByRuleId} />
       </section>
     </main>
   );

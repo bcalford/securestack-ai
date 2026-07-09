@@ -2,6 +2,12 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { listRules } from '../api/client';
 import type { RuleCatalogItem } from '../types';
+import EmptyState from '../components/ui/EmptyState';
+import ErrorState from '../components/ui/ErrorState';
+import LoadingState from '../components/ui/LoadingState';
+import PageHeader from '../components/ui/PageHeader';
+import SeverityBadge from '../components/ui/SeverityBadge';
+import StatusBadge from '../components/ui/StatusBadge';
 
 export default function RuleCatalogPage() {
   const [query, setQuery] = useState('');
@@ -9,6 +15,14 @@ export default function RuleCatalogPage() {
   const [severity, setSeverity] = useState('');
   const { data = [], error, isLoading } = useQuery<RuleCatalogItem[]>({ queryKey: ['rules'], queryFn: listRules });
   const normalized = query.trim().toLowerCase();
+  const hasActiveFilters = Boolean(query || category || severity);
+
+  function clearFilters() {
+    setQuery('');
+    setCategory('');
+    setSeverity('');
+  }
+
   const categories = useMemo(() => Array.from(new Set(data.map((rule) => rule.category))).sort(), [data]);
   const rules = useMemo(
     () => data
@@ -28,9 +42,11 @@ export default function RuleCatalogPage() {
 
   return (
     <main className="container">
-      <p className="eyebrow">Static analysis</p>
-      <h1>Rule Catalog</h1>
-      <p className="lede">Review the deterministic checks SecureStack AI runs against uploaded or pasted files. Rules are defensive, local-first, and sorted by stable rule ID.</p>
+      <PageHeader
+        eyebrow="Static analysis"
+        title="Rule Catalog"
+        description="Review the deterministic checks SecureStack AI runs against uploaded or pasted files. Rules are defensive, local-first, and sorted by stable rule ID."
+      />
 
       <div className="filters" aria-label="Rule catalog filters">
         <label htmlFor="rule-search">Search rules
@@ -54,10 +70,23 @@ export default function RuleCatalogPage() {
         </label>
       </div>
 
-      {isLoading && <p>Loading rule catalog…</p>}
-      {error && <p className="error" role="alert">Unable to load rule catalog.</p>}
-      {!isLoading && !error && data.length === 0 && <p className="card">No rules are currently published in the catalog.</p>}
-      {!isLoading && !error && data.length > 0 && rules.length === 0 && <p className="card">No rules match your filter.</p>}
+      {isLoading && <LoadingState>Loading rule catalog…</LoadingState>}
+      {error && <ErrorState>Unable to load rule catalog.</ErrorState>}
+      {!isLoading && !error && data.length === 0 && <EmptyState>No rules are currently published in the catalog.</EmptyState>}
+      {!isLoading && !error && data.length > 0 && rules.length === 0 && (
+        <EmptyState>
+          No rules match your filter.
+          {hasActiveFilters && (
+            <>
+              {' '}
+              <button type="button" className="btn secondary" onClick={clearFilters}>Clear filters</button>
+            </>
+          )}
+        </EmptyState>
+      )}
+      {!isLoading && !error && data.length > 0 && rules.length > 0 && (
+        <p className="helper">Showing {rules.length} of {data.length} rule(s).</p>
+      )}
 
       <section className="grid" aria-label="Rules">
         {rules.map((rule) => (
@@ -67,9 +96,12 @@ export default function RuleCatalogPage() {
                 <p className="eyebrow">{rule.id}</p>
                 <h2>{rule.title}</h2>
               </div>
-              <span className={`badge sev-${rule.severity}`}>{rule.severity}</span>
+              <SeverityBadge severity={rule.severity} />
             </div>
-            <p><strong>Category:</strong> {rule.category}</p>
+            <p>
+              <span className="badge badge-neutral">Category: {rule.category}</span>
+              {rule.confidence && <StatusBadge label={`Confidence: ${rule.confidence}`} />}
+            </p>
             <p>{rule.description}</p>
             <p><strong>Recommendation:</strong> {rule.recommendation}</p>
             {!!rule.controlMappings?.length && (
@@ -78,6 +110,7 @@ export default function RuleCatalogPage() {
               </p>
             )}
             {rule.reviewDepthBehavior && <p className="helper"><strong>Review depth:</strong> {rule.reviewDepthBehavior}</p>}
+            {rule.falsePositiveNote && <p className="helper"><strong>False-positive note:</strong> {rule.falsePositiveNote}</p>}
           </article>
         ))}
       </section>

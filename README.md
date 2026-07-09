@@ -10,11 +10,12 @@ SecureStack AI v0.4-alpha is a local-first defensive security review application
 - Finding details with masked evidence, remediation guidance, secure examples, status updates, remediation workflow counts, rule IDs, and fix-plan inputs.
 - Mock AI summaries by default, with optional manually configured Amazon Bedrock summaries.
 - Real sample report page, PDF report export, hardened SARIF 2.1.0 JSON export, SecureStack JSON report export, and ZIP export bundle for completed reviews.
+- Consistent, accessible frontend design system: shared UI components (cards, badges, page headers, empty/error/loading states), design tokens, keyboard-navigable controls, visible focus states, and severity indicators that always pair color with text.
 - One-command local validation, duplicate/copy artifact guardrails, conservative secret checks, Docker Compose config validation, and GitHub Actions CI validation.
 
 ## Tech stack
 
-- **Frontend:** React, TypeScript, Vite, React Router, TanStack Query, Vitest, Testing Library.
+- **Frontend:** React, TypeScript, Vite, React Router, TanStack Query, Vitest, Testing Library, with a shared component library and CSS design tokens under `frontend/src/components/ui/` and `frontend/src/styles/`.
 - **Backend:** Java 21, Spring Boot, Spring Web, Spring Data JPA, default H2 persistence, optional local PostgreSQL profile, Maven.
 - **Security analysis:** Rule classes for deterministic defensive findings plus risk scoring and provider-abstracted AI summaries.
 - **Reporting:** Server-generated PDF export, backend SARIF 2.1.0 export, SecureStack JSON export, and ZIP export bundle.

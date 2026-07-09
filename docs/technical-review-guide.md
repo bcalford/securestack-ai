@@ -12,10 +12,13 @@ Use this guide to review the application behavior and code structure quickly.
 6. Inspect **Fix these first**, the remediation workflow summary, and expand a finding.
 7. From **Previous scans**, select two completed scans and open the **Regression review** comparison page.
 8. Review remediation workflow counts, threat model, risk paths, fix plan, security review checklist, compare two completed scans when available for risk trend, new findings, resolved findings, and unchanged findings, export a PDF report, download SARIF JSON, download SecureStack JSON, and download the ZIP bundle.
+9. Tab through the navigation, scan form mode buttons, and finding status controls with the keyboard to confirm visible focus states and correct button/link semantics.
 
 ## Code map
 
 - Guided UX and routes: `frontend/src/routes/`, `frontend/src/components/scan/`, `frontend/src/components/findings/`.
+- Shared UI component library: `frontend/src/components/ui/` (buttons, cards, badges, page headers, empty/error/loading states, metric cards).
+- Design tokens and shared styles: `frontend/src/styles/` (`tokens.css`, `base.css`, `layout.css`, `components.css`, `pages.css`).
 - Demo fixtures: `frontend/src/data/demoSamples.ts`.
 - Risk helpers: `frontend/src/utils/risk.ts`.
 - Scan comparison helper/page: `frontend/src/utils/scanComparison.ts`, `frontend/src/routes/ScanComparePage.tsx`, and `docs/scan-comparison.md`.
