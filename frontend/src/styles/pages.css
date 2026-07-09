@@ -85,6 +85,15 @@
   margin-bottom: var(--space-4);
 }
 
+/* Tablet: keep the two-column hero but tighten spacing so it doesn't feel cramped */
+@media (max-width: 1024px) and (min-width: 761px) {
+  .hero-panel,
+  .results-hero {
+    gap: var(--space-4);
+    padding: var(--space-5);
+  }
+}
+
 @media (max-width: 760px) {
   .hero-panel,
   .results-hero {

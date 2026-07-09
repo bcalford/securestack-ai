@@ -1040,3 +1040,39 @@ describe('rule catalog page', () => {
     expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
   });
 });
+
+describe('navigation and accessibility', () => {
+  test('skip link and primary navigation render with a real landmark', () => {
+    renderPath('/');
+
+    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main-content');
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toBeInTheDocument();
+  });
+
+  test('active nav link is marked with aria-current for the current route', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    const historyLink = await screen.findByRole('link', { name: 'History' });
+    expect(historyLink).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Rules' })).not.toHaveAttribute('aria-current');
+  });
+
+  test('compare link is not keyboard-operable until two scans are selected', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([scan, { ...scan, id: 'scan-2', name: 'Follow-up review' }]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    renderPath('/scans');
+
+    const compareLink = await screen.findByRole('link', { name: 'Compare selected scans' });
+    expect(compareLink).toHaveAttribute('aria-disabled', 'true');
+    expect(compareLink).toHaveAttribute('tabIndex', '-1');
+  });
+});

@@ -69,11 +69,14 @@ export default function SampleReportPage() {
         </div>
       </section>
 
-      <div className="grid cards" aria-label="Sample severity and category summary">
-        <RiskSummaryCards scan={sampleReport} />
-        <SeverityChart counts={sampleReport.severityCounts} />
-        <CategoryBreakdown counts={sampleReport.categoryCounts} />
-      </div>
+      <section aria-labelledby="sample-summary-cards-heading">
+        <h2 id="sample-summary-cards-heading" className="visually-hidden">Summary at a glance</h2>
+        <div className="grid cards" aria-label="Sample severity and category summary">
+          <RiskSummaryCards scan={sampleReport} />
+          <SeverityChart counts={sampleReport.severityCounts} />
+          <CategoryBreakdown counts={sampleReport.categoryCounts} />
+        </div>
+      </section>
 
       <section className="card">
         <h2>Files reviewed</h2>

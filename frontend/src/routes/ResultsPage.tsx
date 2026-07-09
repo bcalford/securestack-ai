@@ -11,6 +11,7 @@ import FindingsTable from '../components/findings/FindingsTable';
 import RemediationStatusSummary from '../components/findings/RemediationStatusSummary';
 import ReportActions from '../components/reports/ReportActions';
 import AlertState from '../components/ui/ErrorState';
+import InlineLoadingState from '../components/ui/LoadingState';
 import SeverityBadge from '../components/ui/SeverityBadge';
 import StatusBadge from '../components/ui/StatusBadge';
 import type { ChecklistItem, ControlMapping, Finding, FixPlanItem, RiskPath, ThreatModel } from '../types';
@@ -234,11 +235,14 @@ export default function ResultsPage() {
         </div>
       </section>
 
-      <div className="grid cards">
-        <RiskSummaryCards scan={data} />
-        <SeverityChart counts={data.severityCounts} />
-        <CategoryBreakdown counts={data.categoryCounts} />
-      </div>
+      <section aria-labelledby="summary-cards-heading">
+        <h2 id="summary-cards-heading" className="visually-hidden">Summary at a glance</h2>
+        <div className="grid cards">
+          <RiskSummaryCards scan={data} />
+          <SeverityChart counts={data.severityCounts} />
+          <CategoryBreakdown counts={data.categoryCounts} />
+        </div>
+      </section>
 
       <FixFirstPanel findings={data.findings} />
       <RemediationStatusSummary findings={data.findings} />
@@ -259,7 +263,7 @@ export default function ResultsPage() {
         {reviewArtifacts.isError && (
           <AlertState>Unable to load security review artifacts. Please try again.</AlertState>
         )}
-        {reviewArtifacts.isLoading && <p className="helper">Loading security review artifacts…</p>}
+        {reviewArtifacts.isLoading && <InlineLoadingState>Loading security review artifacts…</InlineLoadingState>}
         {reviewArtifacts.data && (
           <div className="artifact-stack">
             <ThreatModelCard threatModel={reviewArtifacts.data.threatModel} />

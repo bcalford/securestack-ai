@@ -28,6 +28,12 @@ export default function ScanHistoryPage() {
     ));
   }
 
+  const compareReady = selected.length === 2;
+
+  function handleCompareClick(event: React.MouseEvent) {
+    if (!compareReady) event.preventDefault();
+  }
+
   return (
     <main className="container">
       <PageHeader
@@ -42,7 +48,15 @@ export default function ScanHistoryPage() {
         <section className="card comparison-picker" aria-label="Regression review picker">
           <h2>Regression review</h2>
           <p>Select two completed scans to review risk trend, new findings, resolved findings, unchanged findings, and severity/category movement.</p>
-          <Link className={`btn ${selected.length === 2 ? '' : 'disabled'}`} aria-disabled={selected.length !== 2} to={compareHref}>Compare selected scans</Link>
+          <Link
+            className={`btn ${compareReady ? '' : 'disabled'}`}
+            aria-disabled={!compareReady}
+            tabIndex={compareReady ? undefined : -1}
+            onClick={handleCompareClick}
+            to={compareHref}
+          >
+            Compare selected scans
+          </Link>
           <p className="helper">{selected.length}/2 scans selected. Comparison stays local and uses stored scan results.</p>
         </section>
       )}
