@@ -1,6 +1,6 @@
 # SecureStack AI
 
-SecureStack AI v0.4-alpha is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and local report exports.
+SecureStack AI v0.5.1 is a local-first defensive security review application for analyzing source and configuration files. It combines a React/Vite frontend, Java 21 Spring Boot API, deterministic static security rules, mock AI summaries by default, optional Amazon Bedrock summaries, and local report exports.
 
 ## Features
 
@@ -173,6 +173,7 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md), [`SECURITY_MODEL.md`](SECURITY_MODEL.m
 - [`docs/deployment-aws.md`](docs/deployment-aws.md)
 - [`docs/v0.3-release-notes.md`](docs/v0.3-release-notes.md)
 - [`docs/v0.4-release-notes.md`](docs/v0.4-release-notes.md)
+- [`docs/v0.5.1-release-notes.md`](docs/v0.5.1-release-notes.md)
 
 ### Security review artifacts
 
