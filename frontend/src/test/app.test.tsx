@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
-import type { Finding, FixPlan, RiskPathResponse, Scan, SecurityChecklist, ThreatModel } from '../types';
+import type { Finding, FixPlan, RiskPathResponse, RuleCatalogItem, Scan, SecurityChecklist, ThreatModel } from '../types';
 import { topPriorityFindings } from '../utils/risk';
 import { compareScans } from '../utils/scanComparison';
 
@@ -118,6 +118,21 @@ const checklist: SecurityChecklist = {
   items: [{ id: 'secrets-reviewed', label: 'Secrets reviewed', status: 'pending', guidance: 'Review related finding IDs before release.' }],
 };
 
+const rulesCatalog: RuleCatalogItem[] = [
+  {
+    id: 'SEC-002',
+    title: 'Hardcoded credential',
+    category: 'SECRETS',
+    severity: 'HIGH',
+    description: 'Detects hardcoded credentials in source.',
+    recommendation: 'Use a secrets manager and rotate exposed values.',
+    controlMappings: [
+      { framework: 'OWASP Top 10', value: 'A02:2021 Cryptographic Failures' },
+      { framework: 'CWE', value: 'CWE-798 Use of Hard-coded Credentials' },
+    ],
+  },
+];
+
 function jsonResponse(body: unknown, status = 200) {
   return Promise.resolve(new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }));
 }
@@ -150,6 +165,7 @@ function mockScanResponse(body: Scan = scan) {
     if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
     if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
     if (url.endsWith('/checklist')) return jsonResponse(checklist);
+    if (url.endsWith('/rules')) return jsonResponse(rulesCatalog);
     return jsonResponse(body);
   });
 }
@@ -162,6 +178,7 @@ function mockResultsFetchWithEndpoint(endpoint: string, body: unknown, status = 
     if (url.endsWith('/risk-paths')) return jsonResponse(riskPaths);
     if (url.endsWith('/fix-plan')) return jsonResponse(fixPlan);
     if (url.endsWith('/checklist')) return jsonResponse(checklist);
+    if (url.endsWith('/rules')) return jsonResponse(rulesCatalog);
     if (url.endsWith(endpoint)) return jsonResponse(body, status);
     return jsonResponse(scan);
   });
@@ -528,21 +545,33 @@ describe('results page', () => {
     expect(screen.getAllByText('Risk score')[0]).toBeInTheDocument();
     expect(screen.getAllByText('80')[0]).toBeInTheDocument();
     expect(screen.getAllByText('Summary provider: mock')[0]).toBeInTheDocument();
+    expect(screen.getByText('Files reviewed: 1')).toBeInTheDocument();
+    expect(screen.getByText('Findings: 2')).toBeInTheDocument();
+    expect(screen.getByText('Files in this review (1)')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Fix these first' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Defensive Security Review Summary' })).toBeInTheDocument();
     expect(screen.getByText('Prioritize secret rotation')).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Findings' })).toBeInTheDocument();
+    expect(screen.getByText('Showing 2 of 2 finding(s).')).toBeInTheDocument();
+
+    const fixFirstLink = screen.getByRole('link', { name: 'Hardcoded credential' });
+    expect(fixFirstLink).toHaveAttribute('href', '#finding-finding-1');
 
     const findingCard = screen.getByLabelText('Update status for Hardcoded credential').closest('article');
     expect(findingCard).not.toBeNull();
+    expect(findingCard).toHaveAttribute('id', 'finding-finding-1');
 
     const finding = within(findingCard as HTMLElement);
+    expect(finding.getByText('Confidence: HIGH')).toBeInTheDocument();
+    expect(finding.getByText('Status: OPEN')).toBeInTheDocument();
     expect(finding.getByText('Evidence')).toBeInTheDocument();
     expect(finding.getByText('password=********')).toBeInTheDocument();
     expect(finding.getByText('Recommended fix')).toBeInTheDocument();
     expect(finding.getByText('Use a secrets manager and rotate exposed values.')).toBeInTheDocument();
     expect(finding.getByText('Secure example')).toBeInTheDocument();
     expect(finding.getByText('const password = process.env.DB_PASSWORD;')).toBeInTheDocument();
+    expect(finding.getByText('Control mappings')).toBeInTheDocument();
+    expect(finding.getByText(/OWASP Top 10: A02:2021 Cryptographic Failures/)).toBeInTheDocument();
     expect(finding.getByLabelText('Update status for Hardcoded credential')).toHaveValue('OPEN');
     expect(finding.getByText('Rule ID: SEC-002')).toBeInTheDocument();
   });
@@ -557,6 +586,8 @@ describe('results page', () => {
     expect(screen.getByText('Risk paths')).toBeInTheDocument();
     expect(screen.getByText('Fix plan')).toBeInTheDocument();
     expect(screen.getByText('Security review checklist')).toBeInTheDocument();
+    expect(screen.getByText(/Assets, entry points, trust boundaries, and abuse cases inferred/)).toBeInTheDocument();
+    expect(screen.getByText(/A verification-driven checklist for confirming remediation/)).toBeInTheDocument();
   });
 
   test('mocked threat model renders defensive sections', async () => {
@@ -626,6 +657,9 @@ describe('results page', () => {
     expect(screen.getByRole('button', { name: 'Download SARIF' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download JSON' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Download bundle' })).toBeInTheDocument();
+    expect(screen.getByText(/Hardened SARIF 2.1.0 JSON for import into code scanning tools/)).toBeInTheDocument();
+    expect(screen.getByText(/Full structured scan data for local tooling or automation/)).toBeInTheDocument();
+    expect(screen.getByText(/ZIP containing the generated reports for handoff or archival/)).toBeInTheDocument();
   });
 
   test('SARIF export downloads from the expected endpoint', async () => {
@@ -762,6 +796,7 @@ describe('results page', () => {
     fireEvent.change(screen.getByLabelText('Search findings'), { target: { value: 'no-match' } });
 
     expect(screen.getByText(/No findings match the current filters/)).toBeInTheDocument();
+    expect(screen.getByText('Showing 0 of 2 finding(s).')).toBeInTheDocument();
   });
 
   test('results page status summary renders', async () => {

@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { updateFindingStatus } from '../../api/client';
-import type { Finding } from '../../types';
+import type { ControlMapping, Finding } from '../../types';
 import EmptyState from '../ui/EmptyState';
 import ErrorState from '../ui/ErrorState';
 import SeverityBadge from '../ui/SeverityBadge';
+import StatusBadge from '../ui/StatusBadge';
 import FindingDetails from './FindingDetails';
 
 type FindingsTableProps = {
   scanId: string;
   rows: Finding[];
+  controlMappingsByRuleId?: Record<string, ControlMapping[]>;
 };
 
-export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
+export default function FindingsTable({ scanId, rows, controlMappingsByRuleId = {} }: FindingsTableProps) {
   const [local, setLocal] = useState<Finding[]>(rows);
   const [error, setError] = useState('');
 
@@ -45,18 +47,19 @@ export default function FindingsTable({ scanId, rows }: FindingsTableProps) {
       {error && <ErrorState>{error}</ErrorState>}
 
       {local.map(finding => (
-        <article className="card finding-card" key={finding.id}>
+        <article className="card finding-card" id={`finding-${finding.id}`} key={finding.id}>
           <header>
             <SeverityBadge severity={finding.severity} />
             <span className="badge">{finding.category}</span>
+            <StatusBadge label={`Confidence: ${finding.confidence}`} />
+            <StatusBadge label={`Status: ${finding.status}`} />
             <h3>{finding.title}</h3>
             <p>
               {finding.fileName}{finding.lineNumber ? `:${finding.lineNumber}` : ''}
-              {' '}· Confidence: {finding.confidence}
             </p>
           </header>
 
-          <FindingDetails finding={finding} />
+          <FindingDetails finding={finding} controlMappings={controlMappingsByRuleId[finding.ruleId]} />
 
           <label>
             Status
