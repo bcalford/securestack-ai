@@ -53,8 +53,12 @@ export default function SampleReportPage() {
           <p className="eyebrow">Static sample report</p>
           <h1>{sampleReport.name}</h1>
           <p>
-            This report uses static, fake demo-only data rendered entirely in the browser so you can preview
-            SecureStack AI results without uploading files or calling the backend.
+            This report uses static, fake demo-only data rendered entirely in the browser so reviewers can preview
+            SecureStack AI output without uploading files or calling the backend.
+          </p>
+          <p>
+            The report illustrates why the outputs matter: risk scoring, fix-first findings, review artifacts, and
+            exports help convert security signals into prioritized remediation and validation steps.
           </p>
           <p>
             <span className="badge">Risk level: {sampleReport.riskLevel}</span>
@@ -114,16 +118,17 @@ export default function SampleReportPage() {
           <div>
             <h3>Methodology</h3>
             <p>
-              SecureStack AI validates submitted files, treats all content as untrusted, applies deterministic
-              defensive static-analysis rules, scores risk from severity and confidence, and generates a concise
-              remediation-oriented summary using the configured AI provider.
+              SecureStack AI validates submitted files, treats all content as untrusted, avoids executing uploaded
+              code, applies deterministic defensive static-analysis rules, scores risk from severity and confidence,
+              and generates a concise remediation-oriented summary using the configured AI provider.
             </p>
           </div>
           <div>
             <h3>Limitations</h3>
             <p>
-              This static report is illustrative only. It does not represent a live scan, execute code, prove exploitability,
-              replace manual review, or guarantee that every vulnerability in a real project would be found.
+              This static report is illustrative only and uses fake demo-only data. It does not represent a live scan,
+              execute code, prove exploitability, replace manual review, or guarantee that every vulnerability in a
+              real project would be found.
             </p>
           </div>
         </div>

@@ -74,13 +74,18 @@ The backend runs on `http://localhost:8080`. The Vite dev server runs on `http:/
 
 ## Guided demo
 
-Click **Run sample security review** on the landing page or open:
+For the fastest reviewer walkthrough:
 
-```text
-/scans/new?sample=full-portfolio-demo
-```
+1. Start the app with `docker compose up --build` and open `http://localhost:5173`.
+2. Click **Run sample security review** on the landing page, or open `/scans/new?sample=full-portfolio-demo`.
+3. Confirm the intentionally vulnerable demo fixture files are preloaded. The sample uses fake demo-only secrets.
+4. Run the review and inspect the risk score, severity/category breakdowns, and **Fix these first** findings.
+5. Expand finding details to review masked evidence, recommendations, secure examples, status, confidence, and rule IDs.
+6. Open the threat model, risk paths, fix plan, and security review checklist to see how findings become remediation guidance.
+7. Browse **Rules** for the rule catalog, then open **Review history** to compare completed scans when two scans are available.
+8. Export the PDF report, SARIF, SecureStack JSON, or ZIP bundle from the results page.
 
-The app preloads intentionally vulnerable fixture files with fake demo-only secrets. Run the review, inspect the risk score and prioritized findings, expand finding details, review the remediation workflow summary, run a Regression review from scan history, and export PDF, SARIF, JSON, or the ZIP bundle from the results page. The sample report page provides a realistic report-style view for demos without claiming to be a hosted scanner.
+The sample report page provides a static report-style preview without uploading files or calling the backend. SecureStack AI is local/demo-oriented: uploaded code is not executed, mock AI is the default, raw file storage is disabled by default, and the app is not a hosted scanner.
 
 ## Screenshots
 
