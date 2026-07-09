@@ -9,6 +9,19 @@
   margin: var(--space-1) 0 var(--space-2);
 }
 
+/* Scan history rows */
+.history-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.history-row-head h3 {
+  margin: 0;
+}
+
 /* Export options */
 .export-option {
   display: flex;

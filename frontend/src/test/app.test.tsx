@@ -519,6 +519,22 @@ describe('scan comparison', () => {
     expect(screen.getByText('-10')).toBeInTheDocument();
   });
 
+  test('compare page renders unchanged findings and explains matching limitations', async () => {
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify(scan), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(newerScan), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    renderPath('/scans/compare?left=scan-1&right=scan-2');
+
+    expect(await screen.findByRole('heading', { name: 'Unchanged findings' })).toBeInTheDocument();
+    expect(screen.getByText('No unchanged findings between these scans.')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Changed findings' })).toBeInTheDocument();
+    expect(screen.getByText('Hardcoded credential — app.js:1')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'How findings are matched' })).toBeInTheDocument();
+    expect(screen.getByText(/matched between scans by rule ID, file, line, title, category, and evidence/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Choose different scans' })).toHaveAttribute('href', '/scans');
+  });
+
   test('scan history allows selecting two scans for comparison', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(JSON.stringify([scan, newerScan]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
@@ -532,6 +548,44 @@ describe('scan comparison', () => {
 
     expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('href', '/scans/compare?left=scan-1&right=scan-2');
     expect(screen.getByRole('link', { name: 'Compare selected scans' })).toHaveAttribute('aria-disabled', 'false');
+  });
+
+  test('scan history renders scan cards with risk level, score, and finding count', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([scan, newerScan]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    expect(screen.getByRole('heading', { name: 'Previous scans' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Demo review' })).toHaveAttribute('href', '/scans/scan-1');
+    expect(screen.getByRole('link', { name: 'Follow-up review' })).toHaveAttribute('href', '/scans/scan-2');
+    expect(screen.getAllByText('Risk level: MODERATE')).toHaveLength(2);
+    expect(screen.getByText('Risk score: 80/100')).toBeInTheDocument();
+    expect(screen.getByText('Risk score: 70/100')).toBeInTheDocument();
+    expect(screen.getAllByText('Findings: 2')).toHaveLength(2);
+    expect(screen.getByText('2 scan(s) in history.')).toBeInTheDocument();
+  });
+
+  test('scan history empty state is controlled', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify([]), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    expect(await screen.findByText('No scans yet. Start a new security review to populate history.')).toBeInTheDocument();
+  });
+
+  test('scan history error state is controlled', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ message: 'backend detail' }), { status: 500, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/scans');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to load scan history.');
+    expect(screen.queryByText('backend detail')).not.toBeInTheDocument();
   });
 });
 
@@ -880,6 +934,7 @@ describe('rule catalog page', () => {
       title: 'Secret detection',
       category: 'SECRETS',
       severity: 'HIGH',
+      confidence: 'HIGH',
       description: 'Detects committed credentials.',
       recommendation: 'Rotate exposed credentials and use a managed secret store.',
       secureExample: 'AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}',
@@ -935,6 +990,36 @@ describe('rule catalog page', () => {
     fireEvent.change(screen.getByLabelText('Filter severity'), { target: { value: 'HIGH' } });
     expect(screen.getByText('Secret detection')).toBeInTheDocument();
     expect(screen.queryByText('Wildcard CORS policy')).not.toBeInTheDocument();
+  });
+
+  test('/rules shows a rule count summary, confidence badge, and false-positive note', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    expect(screen.getByText('Showing 2 of 2 rule(s).')).toBeInTheDocument();
+    expect(screen.getByText('Confidence: HIGH')).toBeInTheDocument();
+    expect(screen.getByText('Sample keys may be fake.')).toBeInTheDocument();
+  });
+
+  test('/rules clear filters button resets search and restores hidden rules', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(rules), { status: 200, headers: { 'Content-Type': 'application/json' } }),
+    );
+
+    renderPath('/rules');
+
+    await screen.findByText('Secret detection');
+    fireEvent.change(screen.getByLabelText('Search rules'), { target: { value: 'no-match-at-all' } });
+
+    expect(screen.getByText('No rules match your filter.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(screen.getByText('Secret detection')).toBeInTheDocument();
+    expect(screen.getByText('Wildcard CORS policy')).toBeInTheDocument();
   });
 
   test('/rules shows controlled empty and error states', async () => {

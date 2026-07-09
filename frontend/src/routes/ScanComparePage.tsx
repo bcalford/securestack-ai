@@ -4,8 +4,12 @@ import { useQueries } from '@tanstack/react-query';
 import { getScan } from '../api/client';
 import ErrorState from '../components/ui/ErrorState';
 import LoadingState from '../components/ui/LoadingState';
+import SeverityBadge from '../components/ui/SeverityBadge';
+import type { Severity } from '../types';
 import type { ComparedFinding } from '../utils/scanComparison';
 import { compareScans } from '../utils/scanComparison';
+
+const severityNames = new Set<string>(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFO']);
 
 function Delta({ value, suffix = '' }: { value: number; suffix?: string }) {
   const label = value > 0 ? `+${value}` : String(value);
@@ -21,6 +25,10 @@ function findingTitle(item: ComparedFinding) {
   return finding ? `${finding.title} — ${finding.fileName}${finding.lineNumber ? `:${finding.lineNumber}` : ''}` : item.key;
 }
 
+function DeltaLabel({ name }: { name: string }) {
+  return severityNames.has(name) ? <SeverityBadge severity={name as Severity} /> : <span className="badge badge-neutral">{name}</span>;
+}
+
 function DeltaList({ title, deltas, empty }: { title: string; deltas: Record<string, number>; empty: string }) {
   const entries = Object.entries(deltas).filter(([, value]) => value !== 0);
   return (
@@ -28,7 +36,7 @@ function DeltaList({ title, deltas, empty }: { title: string; deltas: Record<str
       <h2>{title}</h2>
       {!entries.length ? <p>{empty}</p> : (
         <ul className="delta-list">
-          {entries.map(([name, value]) => <li key={name}><span>{name}</span><Delta value={value} /></li>)}
+          {entries.map(([name, value]) => <li key={name}><DeltaLabel name={name} /><Delta value={value} /></li>)}
         </ul>
       )}
     </article>
@@ -91,6 +99,9 @@ export default function ScanComparePage() {
     <main className="container">
       <p className="eyebrow">Regression review</p>
       <h1>Risk trend</h1>
+      <p className="helper">
+        <Link to="/scans">Choose different scans</Link> from scan history.
+      </p>
       <section className="comparison-hero">
         <article className="card"><h2>Baseline scan</h2><Link to={`/scans/${leftQuery.data.id}`}>{leftQuery.data.name}</Link><p>{formatDate(leftQuery.data.createdAt)}</p><p>{leftQuery.data.riskScore}/100 · {leftQuery.data.findingCount} findings</p></article>
         <article className="card"><h2>Follow-up scan</h2><Link to={`/scans/${rightQuery.data.id}`}>{rightQuery.data.name}</Link><p>{formatDate(rightQuery.data.createdAt)}</p><p>{rightQuery.data.riskScore}/100 · {rightQuery.data.findingCount} findings</p></article>
@@ -110,6 +121,15 @@ export default function ScanComparePage() {
       <FindingComparisonList title="Resolved findings" items={comparison.resolvedFindings} empty="No findings were resolved in the follow-up scan." />
       <FindingComparisonList title="Unchanged findings" items={comparison.unchangedFindings} empty="No unchanged findings between these scans." />
       <FindingComparisonList title="Changed findings" items={comparison.changedFindings} empty="No severity, status, file, or category changes." />
+      <section className="card subtle">
+        <h2>How findings are matched</h2>
+        <p className="helper">
+          Findings are matched between scans by rule ID, file, line, title, category, and evidence. A finding that
+          moved to a different file or line, or whose evidence text changed significantly, may appear as both a
+          resolved finding and a new finding rather than a single changed finding. Review new and resolved findings
+          together when a file was renamed or heavily refactored.
+        </p>
+      </section>
     </main>
   );
 }

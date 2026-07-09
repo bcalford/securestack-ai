@@ -7,6 +7,7 @@ import ErrorState from '../components/ui/ErrorState';
 import LoadingState from '../components/ui/LoadingState';
 import PageHeader from '../components/ui/PageHeader';
 import SeverityBadge from '../components/ui/SeverityBadge';
+import StatusBadge from '../components/ui/StatusBadge';
 
 export default function RuleCatalogPage() {
   const [query, setQuery] = useState('');
@@ -14,6 +15,14 @@ export default function RuleCatalogPage() {
   const [severity, setSeverity] = useState('');
   const { data = [], error, isLoading } = useQuery<RuleCatalogItem[]>({ queryKey: ['rules'], queryFn: listRules });
   const normalized = query.trim().toLowerCase();
+  const hasActiveFilters = Boolean(query || category || severity);
+
+  function clearFilters() {
+    setQuery('');
+    setCategory('');
+    setSeverity('');
+  }
+
   const categories = useMemo(() => Array.from(new Set(data.map((rule) => rule.category))).sort(), [data]);
   const rules = useMemo(
     () => data
@@ -64,7 +73,20 @@ export default function RuleCatalogPage() {
       {isLoading && <LoadingState>Loading rule catalog…</LoadingState>}
       {error && <ErrorState>Unable to load rule catalog.</ErrorState>}
       {!isLoading && !error && data.length === 0 && <EmptyState>No rules are currently published in the catalog.</EmptyState>}
-      {!isLoading && !error && data.length > 0 && rules.length === 0 && <EmptyState>No rules match your filter.</EmptyState>}
+      {!isLoading && !error && data.length > 0 && rules.length === 0 && (
+        <EmptyState>
+          No rules match your filter.
+          {hasActiveFilters && (
+            <>
+              {' '}
+              <button type="button" className="btn secondary" onClick={clearFilters}>Clear filters</button>
+            </>
+          )}
+        </EmptyState>
+      )}
+      {!isLoading && !error && data.length > 0 && rules.length > 0 && (
+        <p className="helper">Showing {rules.length} of {data.length} rule(s).</p>
+      )}
 
       <section className="grid" aria-label="Rules">
         {rules.map((rule) => (
@@ -76,7 +98,10 @@ export default function RuleCatalogPage() {
               </div>
               <SeverityBadge severity={rule.severity} />
             </div>
-            <p><strong>Category:</strong> {rule.category}</p>
+            <p>
+              <span className="badge badge-neutral">Category: {rule.category}</span>
+              {rule.confidence && <StatusBadge label={`Confidence: ${rule.confidence}`} />}
+            </p>
             <p>{rule.description}</p>
             <p><strong>Recommendation:</strong> {rule.recommendation}</p>
             {!!rule.controlMappings?.length && (
@@ -85,6 +110,7 @@ export default function RuleCatalogPage() {
               </p>
             )}
             {rule.reviewDepthBehavior && <p className="helper"><strong>Review depth:</strong> {rule.reviewDepthBehavior}</p>}
+            {rule.falsePositiveNote && <p className="helper"><strong>False-positive note:</strong> {rule.falsePositiveNote}</p>}
           </article>
         ))}
       </section>
