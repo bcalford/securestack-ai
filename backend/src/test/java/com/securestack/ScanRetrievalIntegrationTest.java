@@ -16,6 +16,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -31,7 +32,7 @@ class ScanRetrievalIntegrationTest {
                 [{
                   "fileName":"app.js",
                   "fileType":"js",
-                  "content":"const api_key = 'fake-demo-api-key-12345';\\napp.use(cors({ origin: '*' }));"
+                  "content":"app.use(cors({ origin: '*' }));\\napp.use(cors({ origin: '*' }));"
                 }]
                 """;
 
@@ -62,5 +63,45 @@ class ScanRetrievalIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("Requested scan or finding was not found."));
+    }
+
+    @Test
+    void invalidScanIdentifierReturnsControlledValidationError() throws Exception {
+        mvc.perform(get("/api/scans/{scanId}", "not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("Invalid scan or finding identifier."));
+    }
+
+    @Test
+    void missingFindingStatusReturnsControlledValidationError() throws Exception {
+        String pastedFiles = """
+                [{
+                  "fileName":"app.js",
+                  "fileType":"js",
+                  "content":"app.use(cors({ origin: '*' }));"
+                }]
+                """;
+
+        MvcResult created = mvc.perform(multipart("/api/scans")
+                        .param("scanName", "Status validation")
+                        .param("reviewDepth", "STANDARD")
+                        .param("pastedFiles", pastedFiles)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String scanId = mapper.readTree(created.getResponse().getContentAsString()).get("scanId").asText();
+        MvcResult scanResult = mvc.perform(get("/api/scans/{scanId}", scanId))
+                .andExpect(status().isOk())
+                .andReturn();
+        String findingId = mapper.readTree(scanResult.getResponse().getContentAsString()).get("findings").get(0).get("id").asText();
+
+        mvc.perform(patch("/api/scans/{scanId}/findings/{findingId}", scanId, findingId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("Finding status is required."));
     }
 }

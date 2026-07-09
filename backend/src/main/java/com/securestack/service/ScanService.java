@@ -87,7 +87,13 @@ public class ScanService {
     private List<ScanFileInput> normalizeFiles(String pastedJson, MultipartFile[] uploads) throws Exception {
         List<ScanFileInput> files = new ArrayList<>();
         if (pastedJson != null && !pastedJson.isBlank()) {
-            for (PastedFile pasted : Arrays.asList(mapper.readValue(pastedJson, PastedFile[].class))) {
+            PastedFile[] pastedInputs;
+            try {
+                pastedInputs = mapper.readValue(pastedJson, PastedFile[].class);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Pasted file input could not be read.");
+            }
+            for (PastedFile pasted : Arrays.asList(pastedInputs)) {
                 if (pasted.content() != null && !pasted.content().isBlank()) {
                     files.add(new ScanFileInput(pasted.fileName(), pasted.fileType(), pasted.content()));
                     ensureWithinMaxFiles(files);
@@ -148,7 +154,7 @@ public class ScanService {
     private String safeName(String name) {
         if (name == null || name.isBlank()) return "file.txt";
         String normalized = name.replace('\\', '/');
-        if (normalized.startsWith("/") || normalized.contains("../") || normalized.contains("..\\") || Path.of(normalized).isAbsolute()) throw new IllegalArgumentException("Unsafe file path: " + name);
+        if (normalized.equals("..") || normalized.startsWith("../") || normalized.startsWith("/") || normalized.contains("/../") || normalized.endsWith("/..") || Path.of(normalized).isAbsolute()) throw new IllegalArgumentException("Unsafe file path: " + name);
         return normalized;
     }
     private void validate(ScanFileInput file) {
@@ -181,7 +187,7 @@ public class ScanService {
 
     @Transactional(readOnly = true)
     public List<ScanListItem> list() { return scans.findAll().stream().map(s -> new ScanListItem(s.id, s.name, s.createdAt, s.riskScore, s.riskLevel, s.findingCount)).toList(); }
-    @Transactional public void update(UUID sid, UUID fid, FindingStatus st) { Finding f = findings.findById(fid).orElseThrow(NoSuchElementException::new); if (!f.scanId.equals(sid)) throw new NoSuchElementException(); f.status = st; }
+    @Transactional public void update(UUID sid, UUID fid, FindingStatus st) { if (st == null) throw new IllegalArgumentException("Finding status is required."); Finding f = findings.findById(fid).orElseThrow(NoSuchElementException::new); if (!f.scanId.equals(sid)) throw new NoSuchElementException(); f.status = st; }
     @Transactional public void delete(UUID sid) { if (!scans.existsById(sid)) throw new NoSuchElementException(); findings.deleteAll(findings.findByScanId(sid)); scans.deleteById(sid); }
     private ScanResultDto dto(Scan s, List<Finding> fs) { return new ScanResultDto(s.id, s.name, s.createdAt, s.status, s.riskScore, s.riskLevel, s.fileCount, s.findingCount, s.aiProvider, s.executiveSummary, s.remediationSummary, fs.stream().map(f -> new FindingDto(f.id, f.fileName, f.lineNumber, f.title, f.description, f.severity, f.category, f.confidence, f.evidence, f.recommendation, f.secureExample, f.status, f.ruleId)).toList(), severityCounts(fs), categoryCounts(fs), new ArrayList<>(s.files)); }
 }

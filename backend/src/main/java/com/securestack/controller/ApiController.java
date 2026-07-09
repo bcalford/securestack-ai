@@ -11,7 +11,9 @@ import com.securestack.service.ScanService;
 import com.securestack.review.SecurityReviewArtifactService;
 import com.securestack.sarif.SarifService;
 import org.springframework.http.*;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
@@ -74,6 +76,12 @@ public class ApiController {
 
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<ErrorResponse> validation(Exception e) { return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_ERROR", e.getMessage(), List.of())); }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ErrorResponse> invalidPath(Exception e) { return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_ERROR", "Invalid scan or finding identifier.", List.of())); }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ErrorResponse> invalidJson(Exception e) { return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_ERROR", "Request body could not be read.", List.of())); }
 
     @ExceptionHandler(BundleExportException.class)
     ResponseEntity<ErrorResponse> bundleFailure(Exception e) { log.error("Bundle export failed", e); return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("BUNDLE_EXPORT_ERROR", "Unable to generate export bundle.", List.of())); }

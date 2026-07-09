@@ -69,6 +69,32 @@ class ScanServiceTest {
         assertTrue(error.getMessage().contains("Too many files"));
     }
 
+    @Test
+    void rejectsMalformedPastedFileJsonWithControlledMessage() {
+        var service = new ScanService(List.of(), null, null, new MockAiAnalysisProvider());
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.create("bad pasted", "STANDARD", "", "[not-json", null, false)
+        );
+
+        assertEquals("Pasted file input could not be read.", error.getMessage());
+    }
+
+    @Test
+    void rejectsZipPathTraversalAtSegmentBoundary() throws Exception {
+        var service = new ScanService(List.of(), null, null, new MockAiAnalysisProvider());
+        byte[] zip = zipWithFiles("repo/../evil.js");
+        var upload = new MockMultipartFile("files", "demo.zip", "application/zip", zip);
+
+        IllegalArgumentException error = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.create("zip demo", "STANDARD", "", "[]", new MockMultipartFile[]{upload}, false)
+        );
+
+        assertTrue(error.getMessage().contains("Unsafe file path"));
+    }
+
     private byte[] zipWithFiles(String... names) throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(output)) {
